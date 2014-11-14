@@ -1,31 +1,4 @@
-a+b*c/(1+a);
-
-bar(1+d, foo()+a);
-
-stark foo() {
-	if () {
-	}
-
-	if () {
-	} else {
-		for () {
-			while() {
-			}
-		}
-	}
-
-	for () {
-	}
-
-	while () {
-	}
-
-	do {
-	} while ();
-
-	switch(x) {
-		case 1: // house
-		case 2:
-		default: // free_folk
-	}
-}
+arrays
+blocos aleatórios
+break
+terminar comentario

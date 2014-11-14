@@ -4,7 +4,7 @@ dracarys <stdio.h>
 dracarys <conio>
 
 squire stark ned(stark robb, stark arya);
-squire tully cat();
+squire unsullied grey_worm();
 
 its_known robb, arya as stark;
 its_known daenerys, aemon, maybe_jon_snow as targaryen;
@@ -13,6 +13,28 @@ baratheon bar(stark a){
 
 	#HODOR asjdkhfakjsdf
 
+	for_the_lord_of_winterfell(ICE;a < 100;FIRE){
+		what_do_we_say_to_death(a==b+1*foo()){
+			ITS_KNOWN tyrion, tywin, cersei, joffrey, james_vulgo_assassino_do_rei AS Lannister;
+		}
+		Not_Today{
+
+			while_the_proud_lord_says(FIRE && ICE){
+
+				and_so_he_spokes {
+					ITS_KNOWN robert AS Baratheon;
+					ITS_KNOWN ned AS Stark;
+
+					x = bar(foo(), foooo(bar()), 2n+3, a+b*2n+n/(3+a), 2+a, 2+foo(4+a, bar(foo())), bar()+foo()+2*foooo(bar()));
+					a = x = y = bar(foo(), foooo(bar()), 2n+3, a+b*2n+n/(3+a), 2+a, 2+foo(4+a, bar(foo())), bar()+foo()+2*foooo(bar()));
+				}while_the_proud_lord_says(FIRE && ICE);
+			}
+
+			a = x = y = bar(foo(), foooo(bar()), 2n+3, a+b*2n+n/(3+a), 2+a, 2+foo(4+a, bar(foo())), bar()+foo()+2*foooo(bar()));
+
+			2 && a=5 && bar();
+		}
+	}
 }
 
 targaryen foooo(targaryen daenerys, targaryen jon)
@@ -33,7 +55,11 @@ a = x = y = bar(foo(), foooo(bar()), 2n+3, a+b*2n+n/(3+a), 2+a, 2+foo(4+a, bar(f
 
 #HODOR asdkjfsad
 
-all_function_must_die
+;
+;;;;
+
+the_lannister_send_their_regards bar(foo(), foooo(bar()), 2n+3, a+b*2n+n/(3+a), 2+a, 2+foo(4+a, bar(foo())), bar()+foo()+2*foooo(bar()));
+all_functions_must_die
 
 First_of_his_name()
 
@@ -54,4 +80,57 @@ a = x = y = bar(foo(), foooo(bar()), 2n+3, a+b*2n+n/(3+a), 2+a, 2+foo(4+a, bar(f
 
 2 && a=5 && bar();
 
+what_do_we_say_to_death(a==b+1*foo()){
+	#HODOR 
+	#HODOR
+
+	what_do_we_say_to_death(a==b+1*foo()){
+		ITS_KNOWN tyrion, tywin, cersei, joffrey, james_vulgo_assassino_do_rei AS Lannister;
+		
+	}
+	Not_Today{
+
+		while_the_proud_lord_says(FIRE && ICE){
+
+			and_so_he_spokes {
+				ITS_KNOWN robert AS Baratheon;
+				ITS_KNOWN ned AS Stark;
+
+				x = bar(foo(), foooo(bar()), 2n+3, a+b*2n+n/(3+a), 2+a, 2+foo(4+a, bar(foo())), bar()+foo()+2*foooo(bar()));
+				a = x = y = bar(foo(), foooo(bar()), 2n+3, a+b*2n+n/(3+a), 2+a, 2+foo(4+a, bar(foo())), bar()+foo()+2*foooo(bar()));
+			}while_the_proud_lord_says(FIRE && ICE);
+		}
+
+		a = x = y = bar(foo(), foooo(bar()), 2n+3, a+b*2n+n/(3+a), 2+a, 2+foo(4+a, bar(foo())), bar()+foo()+2*foooo(bar()));
+
+		2 && a=5 && bar();
+	}
+}
+
+the_lannister_send_their_regards YOU_KNOW_NOTHING;
+
 valar_morghulis
+
+Lannister maisumaNovaFuncao()
+winter_is_coming
+	ITS_KNOWN cat AS tully;
+	
+
+
+	maester_read(cat);
+
+
+	which_house_do_you_belong_in(a){
+		house "STARK": 
+			a = x = y = bar(foo(), foooo(bar()), 2n+3, a+b*2n+n/(3+a), 2+a, 2+foo(4+a, bar(foo())), bar()+foo()+2*foooo(bar()));
+
+			2 && a=5 && bar();;
+		house "targaryen": ;
+
+		free_folk: the_lannister_send_their_regards YOU_KNOW_NOTHING;
+
+	}
+
+	maester_write(cat);
+
+all_functions_must_die

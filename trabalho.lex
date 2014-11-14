@@ -35,7 +35,7 @@ TERMINA_BLOCO		"}"
 TERMINA_MAIN		"and_now_his_watch_is_ended"
 
 COMECA_FUNCAO		"winter_is_coming"
-TERMINA_FUNCAO		"all_function_must_die"|"valar_morghulis"
+TERMINA_FUNCAO		"all_functions_must_die"|"valar_morghulis"
 
 IF		"what_do_we_say_to_death"
 ELSE	"not_today"
@@ -43,6 +43,8 @@ FOR		"for_the_lord_of_winterfell"
 DO		"and_so_he_spokes"
 WHILE	"while_the_proud_lord_says"
 SWITCH	"which_house_do_you_belong_in"
+CASE 	"house"
+DEFAULT	"free_folk"
 
 RETURN	"the_lannister_send_their_regards"
 
@@ -108,17 +110,19 @@ BIB_INCLUDE		(("<")({LETRA})*(".h")?(">")|(\")({LETRA})*(".h")?(\"))
 {COMECA_FUNCAO}		{ return TK_COMECA_FUNCAO; }
 {TERMINA_FUNCAO}	{ return TK_TERMINA_FUNCAO; }
 
-{IF}				{}
-{ELSE}				{}
-{FOR}				{}
-{DO}				{}
-{WHILE}				{}
-{SWITCH}			{}
+{IF}				{ return TK_IF; }
+{ELSE}				{ return TK_ELSE; }
+{FOR}				{ return TK_FOR; }
+{DO}				{ return TK_DO; }
+{WHILE}				{ return TK_WHILE; }
+{SWITCH}			{ return TK_SWITCH; }
+{CASE} 				{ return TK_CASE; }
+{DEFAULT}			{ return TK_DEFAULT; }
 
-{RETURN}			{}
+{RETURN}			{ return TK_RETURN; }
 
-{SCAN}				{}
-{PRINT}				{}
+{SCAN}				{ return TK_SCAN; }
+{PRINT}				{ return TK_PRINT; }
 
 
 {OR}				{ return TK_OR; }
@@ -140,7 +144,7 @@ BIB_INCLUDE		(("<")({LETRA})*(".h")?(">")|(\")({LETRA})*(".h")?(\"))
 
 {PROTOTIPO}			{ return TK_PROTOTIPO; }
 
-{NULL} 				{}
+{NULL} 				{ return TK_NULL; }
 {BREAK} 			{}
 {DECLARAR_VAR}		{ return TK_DECLARAR_VAR; }
 {AS}				{ return TK_AS; }
