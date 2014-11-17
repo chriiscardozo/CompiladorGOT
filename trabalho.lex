@@ -83,7 +83,7 @@ BIB_INCLUDE		(("<")({LETRA})*(".h")?(">")|(\")({LETRA})*(".h")?(\"))
 
 {DELIM}			{}
 {LINHA}			{}
-{COMENTARIO}		{return TK_COMENTARIO;}
+{COMENTARIO}		{}
 
 {CTE_INT}		{ return TK_CTE_INT; }
 {CTE_DOUBLE}		{ return TK_CTE_DOUBLE; }
