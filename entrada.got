@@ -126,6 +126,14 @@ winter_is_coming
     
 	maester_read(cat);
 
+	{
+	    ITS_KNOWN cat AS tully;
+	    a + 5*b + cat();
+	    {
+	        ITS_KNOWN robb AS Stark;
+	    }
+	}
+
 
 	which_house_do_you_belong_in(a){
 		house "STARK": 
