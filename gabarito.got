@@ -1,0 +1,36 @@
+When you play the game of thrones, you win or you die
+
+#dracarys <string>
+#dracarys <iostream.h>
+#dracarys <teste>
+
+squire stark f( stark a, stark b  );
+
+its_known a, b[12], c as lannister;
+its_known c as baratheon;
+
+unsullied foo(stark y[5], stark x)
+{
+  its_known y[9] as lannister;
+
+  maester_write(y);
+}
+
+first_of_his_name()
+  
+  its_known a as stark;
+  its_known temp as lannister;
+
+  temp = b[32];
+  temp = temp && 1;
+  b[9] = temp;
+  b(1,2,3,temp);
+  a = !temp;
+  what_do_we_say_to_death( a ){
+    the_lannister_send_their_regards 0;
+  }
+  not_today{
+    maester_read(a);
+    maester_write( "Teste"); 
+  }
+and_now_his_watch_is_ended
