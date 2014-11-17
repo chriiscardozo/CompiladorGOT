@@ -1,8 +1,9 @@
 %{
-	
-#include <string>
-#include <iostream>
-using namespace std;
+
+//#include <string>
+//#include <iostream>
+//using namespace std;
+#include <stdio.h>
 
 void yyerror(const char*);
 int yylex();
@@ -19,7 +20,7 @@ int yyparse();
 %token TK_COMP_MENOR TK_COMP_MAIOR TK_COMP_MENOR_IGUAL TK_COMP_MAIOR_IGUAL TK_COMP_IGUAL TK_COMP_DIFF
 %token TK_OR TK_AND TK_NOT
 %token TK_ATRIBUICAO
-%token TK_IF TK_ELSE TK_FOR TK_DO TK_WHILE TK_SWITCH TK_CASE TK_DEFAULT
+%token TK_IF TK_ELSE TK_FOR TK_DO TK_WHILE TK_SWITCH TK_CASE TK_DEFAULT TK_BREAK
 %token TK_RETURN
 %token TK_PRINT TK_SCAN
 
@@ -33,169 +34,178 @@ int yyparse();
 
 %%
 
-S : TK_INICIO INCLUDES PROT VARS_GLOBAIS FUNCOES MAIN FUNCOES	{ cout << "*****Welcome to the Game Of Thrones*****\n\n"; }
+S : TK_INICIO INCLUDES PROT VARS_GLOBAIS FUNCOES MAIN FUNCOES	{ printf("*****Welcome to the Game Of Thrones*****\n\n\n");}
   ;
 
 COMENTARIO : TK_COMENTARIO COMENTARIO
-		   |
-		   ;
+           |
+           ;
 
-MAIN : TK_MAIN BLOCO TK_TERMINA_MAIN
-	 | TK_MAIN TK_COMECA_BLOCO BLOCO TK_TERMINA_BLOCO
-	 ;
+MAIN : TK_MAIN CORPO TK_TERMINA_MAIN
+     ;
 
 FUNCOES : FUNCAO FUNCOES
-		|
-		;
+        |
+        ;
 
-FUNCAO : TIPO TK_ID '(' LISTA_ARGUMENTOS ')' TK_COMECA_BLOCO BLOCO TK_TERMINA_BLOCO
-	   | TIPO TK_ID '(' LISTA_ARGUMENTOS ')' TK_COMECA_FUNCAO BLOCO TK_TERMINA_FUNCAO
-	   ;
+FUNCAO : TIPO TK_ID '(' LISTA_ARGUMENTOS ')' BLOCO
+       ;
 
 INCLUDES : TK_INCLUDE TK_BIB_INCLUDE INCLUDES {}
-		 | {}
-		 ;
+         | {}
+         ;
 
 PROT : TK_PROTOTIPO TIPO TK_ID '(' LISTA_ARGUMENTOS ')' ';' PROT {}
-	 | {}
-	 ;
+     | {}
+     ;
 
 TIPO : TK_INT
-	 | TK_DOUBLE
-	 | TK_FLOAT
-	 | TK_STRING
-	 | TK_CHAR
-	 | TK_BOOL
-	 | TK_VOID
-	 ;
+     | TK_DOUBLE
+     | TK_FLOAT
+     | TK_STRING
+     | TK_CHAR
+     | TK_BOOL
+     | TK_VOID
+     ;
 
 LISTA_ARGUMENTOS : ARGUMENTOS
-				 |
-				 ;
+                 |
+                 ;
 
 ARGUMENTOS : TIPO TK_ID ',' ARGUMENTOS
-		   | TIPO TK_ID
-		   ;
+           | TIPO TK_ID
+           ;
 
 VARS_GLOBAIS : VAR_GLOBAL ';' VARS_GLOBAIS
-			 |
-			 ;
+             |
+             ;
 
 VAR_GLOBAL : TK_DECLARAR_VAR LISTA_IDS TK_AS TIPO
-		   ;
+           ;
 
-LISTA_IDS : TK_ID ',' LISTA_IDS
-		  | TK_ID;
+LISTA_IDS : TK_ID ARRAY ',' LISTA_IDS
+          | TK_ID ARRAY;
 
+ARRAY : '[' TK_CTE_INT ']' ARRAY
+      |
+      ;
 
-BLOCO : COMENTARIO VARS_LOCAIS COMANDOS
-	  ;
+BLOCO : TK_COMECA_BLOCO CORPO TK_TERMINA_BLOCO
+      | TK_COMECA_FUNCAO CORPO TK_TERMINA_FUNCAO
+      ;
+
+CORPO : COMENTARIO VARS_LOCAIS COMANDOS
+      ;
 
 VARS_LOCAIS : VAR_LOCAL ';' COMENTARIO VARS_LOCAIS
-			|
-			;
+            |
+            ;
 
 VAR_LOCAL : TK_DECLARAR_VAR LISTA_IDS TK_AS TIPO
-		  ;
+          ;
 
 COMANDOS : COMANDO COMENTARIO COMANDOS
-		 |
-		 ;
+         |
+         ;
 
 COMANDO : EXPRESSAO ';'
-		| COMANDO_IF
-		| COMANDO_WHILE
-		| COMANDO_DO_WHILE ';'
-		| COMANDO_FOR
-		| COMANDO_SWITCH
-		| COMANDO_RETURN ';'
-		| COMANDO_SCAN ';'
-		| COMANDO_PRINT ';'
-		| ';'
-//		| TK_COMECA_BLOCO BLOCO TK_TERMINA_BLOCO
-		;
+        | COMANDO_IF
+        | COMANDO_WHILE
+        | COMANDO_DO_WHILE ';'
+        | COMANDO_FOR
+        | COMANDO_SWITCH
+        | COMANDO_RETURN ';'
+        | COMANDO_SCAN ';'
+        | COMANDO_PRINT ';'
+        | COMANDO_BREAK ';'
+        | ';'
+        | TK_COMECA_BLOCO CORPO TK_TERMINA_BLOCO
+        ;
+
+COMANDO_BREAK : TK_BREAK
+              ;
 
 CHAMADA_FUNCAO : TK_ID '(' LISTA_PARAMETROS ')'
-			   ;
+               ;
 
 LISTA_PARAMETROS : PARAMETROS
-				 |
-				 ;
+                 |
+                 ;
 
 PARAMETROS : EXPRESSAO ',' PARAMETROS
-		   | EXPRESSAO
-		   ;
+           | EXPRESSAO
+           ;
 
 EXPRESSAO : EXPRESSAO TK_ADICAO EXPRESSAO
-		  | EXPRESSAO TK_SUBTRACAO EXPRESSAO
-		  | EXPRESSAO TK_MULTIPLICACAO EXPRESSAO
-		  | EXPRESSAO TK_DIVISAO EXPRESSAO
-		  | EXPRESSAO TK_MODULO EXPRESSAO
-		  | EXPRESSAO TK_COMP_MENOR EXPRESSAO
-		  | EXPRESSAO TK_COMP_MAIOR EXPRESSAO
-		  | EXPRESSAO TK_COMP_MENOR_IGUAL EXPRESSAO
-		  | EXPRESSAO TK_COMP_MAIOR_IGUAL EXPRESSAO
-		  | EXPRESSAO TK_COMP_IGUAL EXPRESSAO
-		  | EXPRESSAO TK_COMP_DIFF EXPRESSAO
-		  | EXPRESSAO TK_OR EXPRESSAO
-		  | EXPRESSAO TK_AND EXPRESSAO
-		  | TK_NOT EXPRESSAO
-		  | TK_ID TK_ATRIBUICAO EXPRESSAO
-		  | CHAMADA_FUNCAO
-		  | TERMINAL
-		  ;
+          | EXPRESSAO TK_SUBTRACAO EXPRESSAO
+          | EXPRESSAO TK_MULTIPLICACAO EXPRESSAO
+          | EXPRESSAO TK_DIVISAO EXPRESSAO
+          | EXPRESSAO TK_MODULO EXPRESSAO
+          | EXPRESSAO TK_COMP_MENOR EXPRESSAO
+          | EXPRESSAO TK_COMP_MAIOR EXPRESSAO
+          | EXPRESSAO TK_COMP_MENOR_IGUAL EXPRESSAO
+          | EXPRESSAO TK_COMP_MAIOR_IGUAL EXPRESSAO
+          | EXPRESSAO TK_COMP_IGUAL EXPRESSAO
+          | EXPRESSAO TK_COMP_DIFF EXPRESSAO
+          | EXPRESSAO TK_OR EXPRESSAO
+          | EXPRESSAO TK_AND EXPRESSAO
+          | TK_NOT EXPRESSAO
+          | TK_ID TK_ATRIBUICAO EXPRESSAO
+          | CHAMADA_FUNCAO
+          | TERMINAL
+          ;
 
 TERMINAL : TK_ID
-		 | TK_CTE_INT
-		 | TK_CTE_DOUBLE
-		 | TK_CTE_FLOAT
-		 | TK_CTE_CHAR
-		 | TK_CTE_STRING
-		 | TK_CTE_BOOL_TRUE
-		 | TK_CTE_BOOL_FALSE
-		 | '(' EXPRESSAO ')'
-		 | TK_NULL
-		 ;
+         | TK_CTE_INT
+         | TK_CTE_DOUBLE
+         | TK_CTE_FLOAT
+         | TK_CTE_CHAR
+         | TK_CTE_STRING
+         | TK_CTE_BOOL_TRUE
+         | TK_CTE_BOOL_FALSE
+         | '(' EXPRESSAO ')'
+         | TK_NULL
+         ;
 
-COMANDO_IF : TK_IF '(' EXPRESSAO ')' TK_COMECA_BLOCO BLOCO TK_TERMINA_BLOCO
-		   | TK_IF '(' EXPRESSAO ')' TK_COMECA_BLOCO BLOCO TK_TERMINA_BLOCO TK_ELSE TK_COMECA_BLOCO BLOCO TK_TERMINA_BLOCO
-		   ;
+COMANDO_IF : TK_IF '(' EXPRESSAO ')' BLOCO
+           | TK_IF '(' EXPRESSAO ')' BLOCO TK_ELSE BLOCO
+           ;
 
-COMANDO_WHILE : TK_WHILE '(' EXPRESSAO ')' TK_COMECA_BLOCO BLOCO TK_TERMINA_BLOCO
-			  ;
+COMANDO_WHILE : TK_WHILE '(' EXPRESSAO ')' BLOCO
+              ;
 
-COMANDO_DO_WHILE : TK_DO TK_COMECA_BLOCO BLOCO TK_TERMINA_BLOCO TK_WHILE '(' EXPRESSAO ')'
-				 ;
+COMANDO_DO_WHILE : TK_DO BLOCO TK_WHILE '(' EXPRESSAO ')'
+                 ;
 
-COMANDO_FOR : TK_FOR '(' EXPRESSAO_FOR ';' EXPRESSAO_FOR ';' EXPRESSAO_FOR ')' TK_COMECA_BLOCO BLOCO TK_TERMINA_BLOCO
-			;
+COMANDO_FOR : TK_FOR '(' EXPRESSAO_FOR ';' EXPRESSAO_FOR ';' EXPRESSAO_FOR ')' BLOCO
+            ;
 
 EXPRESSAO_FOR : EXPRESSAO
-			  |
-			  ;
+              |
+              ;
 
 COMANDO_SWITCH : TK_SWITCH '(' EXPRESSAO ')' TK_COMECA_BLOCO LISTA_CASE TK_TERMINA_BLOCO
-			   ;
+               ;
 
 LISTA_CASE : CASE LISTA_CASE
-		   | DEFAULT
-		   |
-		   ;
+           | DEFAULT
+           |
+           ;
 
-CASE : TK_CASE EXPRESSAO ':' BLOCO
-	 ;
+CASE : TK_CASE EXPRESSAO ':' CORPO
+     ;
 
-DEFAULT : TK_DEFAULT ':' BLOCO
-		;
+DEFAULT : TK_DEFAULT ':' CORPO
+        ;
 
 COMANDO_RETURN : TK_RETURN EXPRESSAO
-			   ;
+               ;
 
 COMANDO_SCAN : TK_SCAN '(' TK_ID ')'
-			 ;
+             ;
 
 COMANDO_PRINT : TK_PRINT '(' EXPRESSAO ')'
-			  ;
+              ;
 
 %%
 
@@ -203,8 +213,8 @@ COMANDO_PRINT : TK_PRINT '(' EXPRESSAO ')'
 
 void yyerror( const char* st ){
   puts( st );
-  cout << "Perto de " << yytext;
-  //printf( "Linha: %d\nPerto de: '%s'\n", nlinha, yytext );
+  //cout << "Perto de " << yytext;
+  printf( "Perto de: '%s'\n", yytext );
 }
 
 int main( int argc, char* argv[] ){

@@ -76,7 +76,7 @@ DECLARAR_VAR	"its_known"
 AS 				"as"
 
 INICIO			"When you play the game of thrones, you win or you die"
-INCLUDE			"dracarys"
+INCLUDE			"#dracarys"
 BIB_INCLUDE		(("<")({LETRA})*(".h")?(">")|(\")({LETRA})*(".h")?(\"))
 
 %%
@@ -145,7 +145,7 @@ BIB_INCLUDE		(("<")({LETRA})*(".h")?(">")|(\")({LETRA})*(".h")?(\"))
 {PROTOTIPO}			{ return TK_PROTOTIPO; }
 
 {NULL} 				{ return TK_NULL; }
-{BREAK} 			{}
+{BREAK} 			{ return TK_BREAK; }
 {DECLARAR_VAR}		{ return TK_DECLARAR_VAR; }
 {AS}				{ return TK_AS; }
 
