@@ -1,7 +1,7 @@
 When you play the game of thrones, you win or you die
 
 #dracarys <stdio.h>
-#dracarys <conio>
+#dracarys <math.h>
 
 squire stark ned(stark robb, stark arya);
 squire unsullied grey_worm();

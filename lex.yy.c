@@ -1131,7 +1131,7 @@ case 2:
 /* rule 2 can match eol */
 YY_RULE_SETUP
 #line 85 "trabalho.lex"
-{}
+{ contadorLinha++; }
 	YY_BREAK
 case 3:
 /* rule 3 can match eol */
@@ -1397,17 +1397,17 @@ YY_RULE_SETUP
 case 55:
 YY_RULE_SETUP
 #line 152 "trabalho.lex"
-{return TK_INICIO;}
+{ return TK_INICIO; }
 	YY_BREAK
 case 56:
 YY_RULE_SETUP
 #line 153 "trabalho.lex"
-{return TK_INCLUDE;}
+{ return TK_INCLUDE; }
 	YY_BREAK
 case 57:
 YY_RULE_SETUP
 #line 154 "trabalho.lex"
-{ return TK_BIB_INCLUDE; }
+{ yylval = Atributo(yytext); return TK_BIB_INCLUDE; }
 	YY_BREAK
 case 58:
 YY_RULE_SETUP

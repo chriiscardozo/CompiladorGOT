@@ -65,17 +65,42 @@
 #line 1 "trabalho.y" /* yacc.c:339  */
 
 
-//#include <string>
-//#include <iostream>
-//using namespace std;
+#include <string>
+#include <iostream>
 #include <stdio.h>
+#include <stdlib.h>
+
+using namespace std;
+
+struct Tipo {
+  string nome;
+
+  Tipo(){}
+  Tipo(string nome){ this->nome = nome; }
+};
+struct Atributo {
+  string v; // Valor
+  Tipo t;   // Tipo
+  string c; // Código
+
+  Atributo(){}
+  Atributo(string v, string t="", string c =""){
+    this->v = v;
+    this->t.nome = t;
+    this->c = c;
+  }
+};
+
+#define YYSTYPE Atributo
 
 void yyerror(const char*);
 int yylex();
 int yyparse();
 
+string gerarIncludeC(string bib);
 
-#line 79 "y.tab.c" /* yacc.c:339  */
+
+#line 104 "y.tab.c" /* yacc.c:339  */
 
 # ifndef YY_NULLPTR
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -237,7 +262,7 @@ int yyparse (void);
 
 /* Copy the second part of user declarations.  */
 
-#line 241 "y.tab.c" /* yacc.c:358  */
+#line 266 "y.tab.c" /* yacc.c:358  */
 
 #ifdef short
 # undef short
@@ -540,16 +565,16 @@ static const yytype_uint8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    37,    37,    40,    43,    44,    47,    50,    51,    54,
-      55,    58,    59,    60,    61,    62,    63,    64,    67,    68,
-      71,    72,    75,    76,    79,    82,    83,    85,    86,    89,
-      90,    93,    96,    97,   100,   103,   104,   107,   108,   109,
-     110,   111,   112,   113,   114,   115,   116,   117,   118,   121,
-     124,   127,   128,   131,   132,   135,   136,   137,   138,   139,
-     140,   141,   142,   143,   144,   145,   146,   147,   148,   149,
-     150,   151,   154,   155,   156,   157,   158,   159,   160,   161,
-     162,   163,   166,   167,   170,   173,   176,   179,   180,   183,
-     186,   187,   188,   191,   194,   197,   200,   203
+       0,    62,    62,    71,    74,    75,    78,    81,    82,    85,
+      86,    89,    90,    91,    92,    93,    94,    95,    98,    99,
+     102,   103,   106,   107,   110,   113,   114,   116,   117,   120,
+     121,   124,   127,   128,   131,   134,   135,   138,   139,   140,
+     141,   142,   143,   144,   145,   146,   147,   148,   149,   152,
+     155,   158,   159,   162,   163,   166,   167,   168,   169,   170,
+     171,   172,   173,   174,   175,   176,   177,   178,   179,   180,
+     181,   182,   185,   186,   187,   188,   189,   190,   191,   192,
+     193,   194,   197,   198,   201,   204,   207,   210,   211,   214,
+     217,   218,   219,   222,   225,   228,   231,   234
 };
 #endif
 
@@ -1500,37 +1525,48 @@ yyreduce:
   switch (yyn)
     {
         case 2:
-#line 37 "trabalho.y" /* yacc.c:1646  */
-    { printf("*****Welcome to the Game Of Thrones*****\n\n\n");}
-#line 1506 "y.tab.c" /* yacc.c:1646  */
+#line 63 "trabalho.y" /* yacc.c:1646  */
+    { cout << "// *****Welcome to the Game Of Thrones*****\n\n\n"
+        << (yyvsp[-5]).c << "#include <stdio.h>\n"
+                   "#include <stdlib.h>\n"
+                   "#include <string.h>\n"
+        << (yyvsp[-1]).c;
+      }
+#line 1536 "y.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 3:
+#line 71 "trabalho.y" /* yacc.c:1646  */
+    { (yyval) = Atributo(); (yyval).c = "int main(){\n" + (yyvsp[-1]).c + "  return 0;\n}\n"; }
+#line 1542 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 7:
-#line 50 "trabalho.y" /* yacc.c:1646  */
-    {}
-#line 1512 "y.tab.c" /* yacc.c:1646  */
+#line 81 "trabalho.y" /* yacc.c:1646  */
+    { (yyval) = Atributo(); (yyval).c = gerarIncludeC((yyvsp[-1]).v) + (yyvsp[0]).c;}
+#line 1548 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 8:
-#line 51 "trabalho.y" /* yacc.c:1646  */
-    {}
-#line 1518 "y.tab.c" /* yacc.c:1646  */
+#line 82 "trabalho.y" /* yacc.c:1646  */
+    { (yyval) = Atributo(); }
+#line 1554 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 9:
-#line 54 "trabalho.y" /* yacc.c:1646  */
+#line 85 "trabalho.y" /* yacc.c:1646  */
     {}
-#line 1524 "y.tab.c" /* yacc.c:1646  */
+#line 1560 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 10:
-#line 55 "trabalho.y" /* yacc.c:1646  */
+#line 86 "trabalho.y" /* yacc.c:1646  */
     {}
-#line 1530 "y.tab.c" /* yacc.c:1646  */
+#line 1566 "y.tab.c" /* yacc.c:1646  */
     break;
 
 
-#line 1534 "y.tab.c" /* yacc.c:1646  */
+#line 1570 "y.tab.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -1758,15 +1794,21 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 206 "trabalho.y" /* yacc.c:1906  */
+#line 237 "trabalho.y" /* yacc.c:1906  */
 
+
+int contadorLinha = 1;
 
 #include "lex.yy.c"
 
 void yyerror( const char* st ){
   puts( st );
   //cout << "Perto de " << yytext;
-  printf( "Perto de: '%s'\n", yytext );
+  printf( "Na linha: %d. Perto de: '%s'\n", contadorLinha, yytext );
+}
+
+string gerarIncludeC(string bib){
+  return "#include "+bib+"\n";
 }
 
 int main( int argc, char* argv[] ){

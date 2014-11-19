@@ -81,14 +81,14 @@ BIB_INCLUDE		(("<")({LETRA})*(".h")?(">")|(\")({LETRA})*(".h")?(\"))
 
 %%
 
-{DELIM}			{}
-{LINHA}			{}
+{DELIM}				{}
+{LINHA}				{ contadorLinha++; }
 {COMENTARIO}		{}
 
-{CTE_INT}		{ return TK_CTE_INT; }
+{CTE_INT}			{ return TK_CTE_INT; }
 {CTE_DOUBLE}		{ return TK_CTE_DOUBLE; }
-{CTE_FLOAT}		{ return TK_CTE_FLOAT; }
-{CTE_CHAR}		{ return TK_CTE_CHAR; }
+{CTE_FLOAT}			{ return TK_CTE_FLOAT; }
+{CTE_CHAR}			{ return TK_CTE_CHAR; }
 {CTE_STRING}		{ return TK_CTE_STRING; }
 {CTE_BOOL_TRUE}		{ return TK_CTE_BOOL_TRUE; }
 {CTE_BOOL_FALSE}	{ return TK_CTE_BOOL_FALSE; }
@@ -96,10 +96,10 @@ BIB_INCLUDE		(("<")({LETRA})*(".h")?(">")|(\")({LETRA})*(".h")?(\"))
 {TIPO_INTEIRO}		{ return TK_INT; }
 {TIPO_DOUBLE}		{ return TK_DOUBLE; }
 {TIPO_FLOAT}		{ return TK_FLOAT; }
-{TIPO_CHAR}		{ return TK_CHAR; }
+{TIPO_CHAR}			{ return TK_CHAR; }
 {TIPO_STRING}		{ return TK_STRING; }
-{TIPO_BOOL}		{ return TK_BOOL; }
-{TIPO_VOID}		{ return TK_VOID; }
+{TIPO_BOOL}			{ return TK_BOOL; }
+{TIPO_VOID}			{ return TK_VOID; }
 
 {ATRIBUICAO}		{ return TK_ATRIBUICAO; }
 
@@ -110,51 +110,51 @@ BIB_INCLUDE		(("<")({LETRA})*(".h")?(">")|(\")({LETRA})*(".h")?(\"))
 {COMECA_FUNCAO}		{ return TK_COMECA_FUNCAO; }
 {TERMINA_FUNCAO}	{ return TK_TERMINA_FUNCAO; }
 
-{IF}			{ return TK_IF; }
-{ELSE}			{ return TK_ELSE; }
-{FOR}			{ return TK_FOR; }
-{DO}			{ return TK_DO; }
-{WHILE}			{ return TK_WHILE; }
-{SWITCH}		{ return TK_SWITCH; }
-{CASE} 			{ return TK_CASE; }
-{DEFAULT}		{ return TK_DEFAULT; }
+{IF}				{ return TK_IF; }
+{ELSE}				{ return TK_ELSE; }
+{FOR}				{ return TK_FOR; }
+{DO}				{ return TK_DO; }
+{WHILE}				{ return TK_WHILE; }
+{SWITCH}			{ return TK_SWITCH; }
+{CASE} 				{ return TK_CASE; }
+{DEFAULT}			{ return TK_DEFAULT; }
 
-{RETURN}		{ return TK_RETURN; }
+{RETURN}			{ return TK_RETURN; }
 
-{SCAN}			{ return TK_SCAN; }
-{PRINT}			{ return TK_PRINT; }
+{SCAN}				{ return TK_SCAN; }
+{PRINT}				{ return TK_PRINT; }
 
 
-{OR}			{ return TK_OR; }
-{AND} 			{ return TK_AND; }
-{NOT} 			{ return TK_NOT; }
+{OR}				{ return TK_OR; }
+{AND} 				{ return TK_AND; }
+{NOT} 				{ return TK_NOT; }
 
 {COMP_MAIOR}		{ return TK_COMP_MAIOR; }
 {COMP_MENOR} 		{ return TK_COMP_MENOR; }
 {COMP_MAIOR_IGUAL}	{ return TK_COMP_MAIOR_IGUAL; }
 {COMP_MENOR_IGUAL} 	{ return TK_COMP_MENOR_IGUAL; }
 {COMP_IGUAL} 		{ return TK_COMP_IGUAL; }
-{COMP_DIFF}		{ return TK_COMP_DIFF; }
+{COMP_DIFF}			{ return TK_COMP_DIFF; }
 
-{ADICAO}		{ return TK_ADICAO; }
-{SUBTRACAO}		{ return TK_SUBTRACAO; }
+{ADICAO}			{ return TK_ADICAO; }
+{SUBTRACAO}			{ return TK_SUBTRACAO; }
 {MULTIPLICACAO}		{ return TK_MULTIPLICACAO; }
-{DIVISAO}		{ return TK_DIVISAO; }
-{MODULO}		{ return TK_MODULO; }
+{DIVISAO}			{ return TK_DIVISAO; }
+{MODULO}			{ return TK_MODULO; }
 
-{PROTOTIPO}		{ return TK_PROTOTIPO; }
+{PROTOTIPO}			{ return TK_PROTOTIPO; }
 
-{NULL} 			{ return TK_NULL; }
-{BREAK} 		{ return TK_BREAK; }
+{NULL} 				{ return TK_NULL; }
+{BREAK} 			{ return TK_BREAK; }
 {DECLARAR_VAR}		{ return TK_DECLARAR_VAR; }
-{AS}			{ return TK_AS; }
+{AS}				{ return TK_AS; }
 
-{INICIO}		{return TK_INICIO;}
-{INCLUDE}		{return TK_INCLUDE;}
-{BIB_INCLUDE}		{ return TK_BIB_INCLUDE; }
+{INICIO}			{ return TK_INICIO; }
+{INCLUDE}			{ return TK_INCLUDE; }
+{BIB_INCLUDE}		{ yylval = Atributo(yytext); return TK_BIB_INCLUDE; }
 
-{ID}			{return TK_ID;}
+{ID}				{return TK_ID;}
 
-.			{ return *yytext; }
+.					{ return *yytext; }
 
 %%

@@ -1,13 +1,38 @@
 %{
 
-//#include <string>
-//#include <iostream>
-//using namespace std;
+#include <string>
+#include <iostream>
 #include <stdio.h>
+#include <stdlib.h>
+
+using namespace std;
+
+struct Tipo {
+  string nome;
+
+  Tipo(){}
+  Tipo(string nome){ this->nome = nome; }
+};
+struct Atributo {
+  string v; // Valor
+  Tipo t;   // Tipo
+  string c; // Código
+
+  Atributo(){}
+  Atributo(string v, string t="", string c =""){
+    this->v = v;
+    this->t.nome = t;
+    this->c = c;
+  }
+};
+
+#define YYSTYPE Atributo
 
 void yyerror(const char*);
 int yylex();
 int yyparse();
+
+string gerarIncludeC(string bib);
 
 %}
 
@@ -34,10 +59,16 @@ int yyparse();
 
 %%
 
-S : TK_INICIO INCLUDES PROT VARS_GLOBAIS FUNCOES MAIN FUNCOES	{ printf("*****Welcome to the Game Of Thrones*****\n\n\n");}
+S : TK_INICIO INCLUDES PROT VARS_GLOBAIS FUNCOES MAIN FUNCOES	
+      { cout << "// *****Welcome to the Game Of Thrones*****\n\n\n"
+        << $2.c << "#include <stdio.h>\n"
+                   "#include <stdlib.h>\n"
+                   "#include <string.h>\n"
+        << $6.c;
+      }
   ;
 
-MAIN : TK_MAIN CORPO TK_TERMINA_MAIN
+MAIN : TK_MAIN CORPO TK_TERMINA_MAIN { $$ = Atributo(); $$.c = "int main(){\n" + $2.c + "  return 0;\n}\n"; }
      ;
 
 FUNCOES : FUNCAO FUNCOES
@@ -47,8 +78,8 @@ FUNCOES : FUNCAO FUNCOES
 FUNCAO : TIPO TK_ID '(' LISTA_ARGUMENTOS ')' BLOCO
        ;
 
-INCLUDES : TK_INCLUDE TK_BIB_INCLUDE INCLUDES {}
-         | {}
+INCLUDES : TK_INCLUDE TK_BIB_INCLUDE INCLUDES { $$ = Atributo(); $$.c = gerarIncludeC($2.v) + $3.c;}
+         | { $$ = Atributo(); }
          ;
 
 PROT : TK_PROTOTIPO TIPO TK_ID '(' LISTA_ARGUMENTOS ')' ';' PROT {}
@@ -205,12 +236,18 @@ COMANDO_PRINT : TK_PRINT '(' EXPRESSAO ')'
 
 %%
 
+int contadorLinha = 1;
+
 #include "lex.yy.c"
 
 void yyerror( const char* st ){
   puts( st );
   //cout << "Perto de " << yytext;
-  printf( "Perto de: '%s'\n", yytext );
+  printf( "Na linha: %d. Perto de: '%s'\n", contadorLinha, yytext );
+}
+
+string gerarIncludeC(string bib){
+  return "#include "+bib+"\n";
 }
 
 int main( int argc, char* argv[] ){
