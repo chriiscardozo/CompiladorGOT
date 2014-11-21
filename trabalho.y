@@ -50,6 +50,8 @@ struct SimboloVariavel{
 #define C_BOOL    "bool"
 #define C_VOID    "void"
 
+#define MAX_STR   256
+
 void yyerror(const char*);
 void erro(string msg);
 int yylex();
@@ -298,11 +300,25 @@ string gerarIncludeC(string bib){
 
 string declararVariavel(string tipo, string vars, int escopo){
   vector<string> vetorVars = split(vars, ',');
-  string codigo = tipo + " " + vars;
+  string codigo =  tipo + " ";
+  string decl = vars;
 
-  for(int i = 0; i < vetorVars.size(); i++)
+  if(tipo == C_STRING){
+    codigo = string(C_CHAR) + " ";
+    decl = "";
+  }
+
+  for(int i = 0; i < vetorVars.size(); i++){
     inserirVariavelTabela(tipo, vetorVars.at(i), escopo);
 
+    if(tipo == C_STRING){
+      decl = decl + vetorVars.at(i) + "[" + toStr(MAX_STR) +"]";
+      if(i+1 < vetorVars.size())
+        decl = decl + ",";
+    }
+  }
+
+  codigo = codigo + decl;
   return codigo;
 }
 

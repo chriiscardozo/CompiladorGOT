@@ -115,6 +115,8 @@ struct SimboloVariavel{
 #define C_BOOL    "bool"
 #define C_VOID    "void"
 
+#define MAX_STR   256
+
 void yyerror(const char*);
 void erro(string msg);
 int yylex();
@@ -134,7 +136,7 @@ typedef map<string, SimboloVariavel> TSV; // TabelaSimbolosVariavel: Key ==> con
 TSV tabelaSimbolosVariavel;
 
 
-#line 138 "y.tab.c" /* yacc.c:339  */
+#line 140 "y.tab.c" /* yacc.c:339  */
 
 # ifndef YY_NULLPTR
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -296,7 +298,7 @@ int yyparse (void);
 
 /* Copy the second part of user declarations.  */
 
-#line 300 "y.tab.c" /* yacc.c:358  */
+#line 302 "y.tab.c" /* yacc.c:358  */
 
 #ifdef short
 # undef short
@@ -599,16 +601,16 @@ static const yytype_uint8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,    96,    96,   106,   109,   110,   113,   116,   117,   120,
-     121,   124,   125,   126,   127,   128,   129,   130,   133,   134,
-     137,   138,   141,   142,   145,   148,   149,   152,   153,   156,
-     157,   160,   163,   164,   167,   170,   171,   174,   175,   176,
-     177,   178,   179,   180,   181,   182,   183,   184,   185,   188,
-     191,   194,   195,   198,   199,   202,   203,   204,   205,   206,
-     207,   208,   209,   210,   211,   212,   213,   214,   215,   216,
-     217,   218,   221,   222,   223,   224,   225,   226,   227,   228,
-     229,   230,   233,   234,   237,   240,   243,   246,   247,   250,
-     253,   254,   255,   258,   261,   264,   267,   270
+       0,    98,    98,   108,   111,   112,   115,   118,   119,   122,
+     123,   126,   127,   128,   129,   130,   131,   132,   135,   136,
+     139,   140,   143,   144,   147,   150,   151,   154,   155,   158,
+     159,   162,   165,   166,   169,   172,   173,   176,   177,   178,
+     179,   180,   181,   182,   183,   184,   185,   186,   187,   190,
+     193,   196,   197,   200,   201,   204,   205,   206,   207,   208,
+     209,   210,   211,   212,   213,   214,   215,   216,   217,   218,
+     219,   220,   223,   224,   225,   226,   227,   228,   229,   230,
+     231,   232,   235,   236,   239,   242,   245,   248,   249,   252,
+     255,   256,   257,   260,   263,   266,   269,   272
 };
 #endif
 
@@ -1559,7 +1561,7 @@ yyreduce:
   switch (yyn)
     {
         case 2:
-#line 97 "trabalho.y" /* yacc.c:1646  */
+#line 99 "trabalho.y" /* yacc.c:1646  */
     { cout << "// *****Welcome to the Game Of Thrones*****\n\n\n"
         << (yyvsp[-5]).c << "#include <stdio.h>\n"
                    "#include <stdlib.h>\n"
@@ -1567,113 +1569,113 @@ yyreduce:
         << (yyvsp[-3]).c
         << (yyvsp[-1]).c;
       }
-#line 1571 "y.tab.c" /* yacc.c:1646  */
+#line 1573 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 3:
-#line 106 "trabalho.y" /* yacc.c:1646  */
+#line 108 "trabalho.y" /* yacc.c:1646  */
     { (yyval) = Atributo(); (yyval).c = "int main(){\n" + (yyvsp[-1]).c + "  return 0;\n}\n"; }
-#line 1577 "y.tab.c" /* yacc.c:1646  */
+#line 1579 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 7:
-#line 116 "trabalho.y" /* yacc.c:1646  */
+#line 118 "trabalho.y" /* yacc.c:1646  */
     { (yyval) = Atributo(); (yyval).c = gerarIncludeC((yyvsp[-1]).v) + (yyvsp[0]).c;}
-#line 1583 "y.tab.c" /* yacc.c:1646  */
+#line 1585 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 8:
-#line 117 "trabalho.y" /* yacc.c:1646  */
+#line 119 "trabalho.y" /* yacc.c:1646  */
     { (yyval) = Atributo(); }
-#line 1589 "y.tab.c" /* yacc.c:1646  */
+#line 1591 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 9:
-#line 120 "trabalho.y" /* yacc.c:1646  */
+#line 122 "trabalho.y" /* yacc.c:1646  */
     {}
-#line 1595 "y.tab.c" /* yacc.c:1646  */
+#line 1597 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 10:
-#line 121 "trabalho.y" /* yacc.c:1646  */
+#line 123 "trabalho.y" /* yacc.c:1646  */
     {}
-#line 1601 "y.tab.c" /* yacc.c:1646  */
+#line 1603 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 11:
-#line 124 "trabalho.y" /* yacc.c:1646  */
+#line 126 "trabalho.y" /* yacc.c:1646  */
     { (yyval) = Atributo(C_INT);     }
-#line 1607 "y.tab.c" /* yacc.c:1646  */
+#line 1609 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 12:
-#line 125 "trabalho.y" /* yacc.c:1646  */
+#line 127 "trabalho.y" /* yacc.c:1646  */
     { (yyval) = Atributo(C_DOUBLE);  }
-#line 1613 "y.tab.c" /* yacc.c:1646  */
+#line 1615 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 13:
-#line 126 "trabalho.y" /* yacc.c:1646  */
+#line 128 "trabalho.y" /* yacc.c:1646  */
     { (yyval) = Atributo(C_FLOAT);   }
-#line 1619 "y.tab.c" /* yacc.c:1646  */
+#line 1621 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 14:
-#line 127 "trabalho.y" /* yacc.c:1646  */
+#line 129 "trabalho.y" /* yacc.c:1646  */
     { (yyval) = Atributo(C_STRING);  }
-#line 1625 "y.tab.c" /* yacc.c:1646  */
+#line 1627 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 15:
-#line 128 "trabalho.y" /* yacc.c:1646  */
+#line 130 "trabalho.y" /* yacc.c:1646  */
     { (yyval) = Atributo(C_CHAR);    }
-#line 1631 "y.tab.c" /* yacc.c:1646  */
+#line 1633 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 16:
-#line 129 "trabalho.y" /* yacc.c:1646  */
+#line 131 "trabalho.y" /* yacc.c:1646  */
     { (yyval) = Atributo(C_BOOL);    }
-#line 1637 "y.tab.c" /* yacc.c:1646  */
+#line 1639 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 17:
-#line 130 "trabalho.y" /* yacc.c:1646  */
+#line 132 "trabalho.y" /* yacc.c:1646  */
     { (yyval) = Atributo(C_VOID);    }
-#line 1643 "y.tab.c" /* yacc.c:1646  */
+#line 1645 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 22:
-#line 141 "trabalho.y" /* yacc.c:1646  */
+#line 143 "trabalho.y" /* yacc.c:1646  */
     { (yyval) = Atributo();  (yyval).c = (yyvsp[-2]).c + ";\n" + (yyvsp[0]).c; }
-#line 1649 "y.tab.c" /* yacc.c:1646  */
+#line 1651 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 23:
-#line 142 "trabalho.y" /* yacc.c:1646  */
+#line 144 "trabalho.y" /* yacc.c:1646  */
     { (yyval) = Atributo(); }
-#line 1655 "y.tab.c" /* yacc.c:1646  */
+#line 1657 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 24:
-#line 145 "trabalho.y" /* yacc.c:1646  */
+#line 147 "trabalho.y" /* yacc.c:1646  */
     { (yyval) = Atributo(); (yyval).c = declararVariavel((yyvsp[0]).v, (yyvsp[-2]).c, 0); }
-#line 1661 "y.tab.c" /* yacc.c:1646  */
+#line 1663 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 25:
-#line 148 "trabalho.y" /* yacc.c:1646  */
+#line 150 "trabalho.y" /* yacc.c:1646  */
     { (yyval) = Atributo(); (yyval).c = (yyvsp[-3]).v + "," + (yyvsp[0]).c; }
-#line 1667 "y.tab.c" /* yacc.c:1646  */
+#line 1669 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 26:
-#line 149 "trabalho.y" /* yacc.c:1646  */
+#line 151 "trabalho.y" /* yacc.c:1646  */
     { (yyval) = Atributo(); (yyval).c = (yyvsp[-1]).v; }
-#line 1673 "y.tab.c" /* yacc.c:1646  */
+#line 1675 "y.tab.c" /* yacc.c:1646  */
     break;
 
 
-#line 1677 "y.tab.c" /* yacc.c:1646  */
+#line 1679 "y.tab.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -1901,7 +1903,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 273 "trabalho.y" /* yacc.c:1906  */
+#line 275 "trabalho.y" /* yacc.c:1906  */
 
 
 int contadorLinha = 1;
@@ -1910,7 +1912,6 @@ int contadorLinha = 1;
 
 void yyerror( const char* st ){
   puts( st );
-  //cout << "Perto de " << yytext;
   printf( "[%sERRO%s] Na linha: %d. Perto de: '%s'\n", COLOR_RED, COLOR_RESET, contadorLinha, yytext );
 }
 
@@ -1931,11 +1932,25 @@ string gerarIncludeC(string bib){
 
 string declararVariavel(string tipo, string vars, int escopo){
   vector<string> vetorVars = split(vars, ',');
-  string codigo = tipo + " " + vars;
+  string codigo =  tipo + " ";
+  string decl = vars;
 
-  for(int i = 0; i < vetorVars.size(); i++)
+  if(tipo == C_STRING){
+    codigo = string(C_CHAR) + " ";
+    decl = "";
+  }
+
+  for(int i = 0; i < vetorVars.size(); i++){
     inserirVariavelTabela(tipo, vetorVars.at(i), escopo);
 
+    if(tipo == C_STRING){
+      decl = decl + vetorVars.at(i) + "[" + toStr(MAX_STR) +"]";
+      if(i+1 < vetorVars.size())
+        decl = decl + ",";
+    }
+  }
+
+  codigo = codigo + decl;
   return codigo;
 }
 
