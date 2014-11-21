@@ -1,31 +1,31 @@
 %option case-insensitive
 
-DELIM			[ \t]
-LINHA			[\n]
-NUMERO			[0-9]
-LETRA			[A-Za-z_]
+DELIM				[ \t]
+LINHA				[\n]
+NUMERO				[0-9]
+LETRA				[A-Za-z_]
 
-ID			{LETRA}({LETRA}|{NUMERO})*
+ID					{LETRA}({LETRA}|{NUMERO})*
 
-CTE_INT			{NUMERO}+("n")?
-CTE_DOUBLE		{NUMERO}+("."{NUMERO}+)?("n")?
-CTE_FLOAT		{NUMERO}+("."{NUMERO}+)?("n")?("f")
-CTE_CHAR		"\'"."\'"
-CTE_STRING		"\""[^"\n]*"\""
+CTE_INT				{NUMERO}+("n")?
+CTE_DOUBLE			{NUMERO}+("."{NUMERO}+)?("n")?
+CTE_FLOAT			{NUMERO}+("."{NUMERO}+)?("n")?("f")
+CTE_CHAR			"\'"."\'"
+CTE_STRING			"\""[^"\n]*"\""
 CTE_BOOL_TRUE		"FIRE"
 CTE_BOOL_FALSE		"ICE"
 
-COMENTARIO 		"#HODOR".*"\n"
+COMENTARIO 			"#HODOR".*"\n"
 
 TIPO_INTEIRO		"stark"
-TIPO_DOUBLE		"baratheon"
-TIPO_FLOAT		"tully"
-TIPO_CHAR		"lannister"
-TIPO_STRING		"targaryen"
-TIPO_BOOL		"martell"
-TIPO_VOID		"unsullied"
+TIPO_DOUBLE			"baratheon"
+TIPO_FLOAT			"tully"
+TIPO_CHAR			"lannister"
+TIPO_STRING			"targaryen"
+TIPO_BOOL			"martell"
+TIPO_VOID			"unsullied"
 
-ATRIBUICAO		"="
+ATRIBUICAO			"="
 
 
 PRINCIPAL_FUNCAO	"first_of_his_name()"
@@ -37,47 +37,47 @@ TERMINA_MAIN		"and_now_his_watch_is_ended"
 COMECA_FUNCAO		"winter_is_coming"
 TERMINA_FUNCAO		"all_functions_must_die"|"valar_morghulis"
 
-IF			"what_do_we_say_to_death"
-ELSE			"not_today"
-FOR			"for_the_lord_of_winterfell"
-DO			"and_so_he_spokes"
-WHILE			"while_the_proud_lord_says"
-SWITCH			"which_house_do_you_belong_in"
-CASE 			"house"
-DEFAULT			"free_folk"
+IF					"what_do_we_say_to_death"
+ELSE				"not_today"
+FOR					"for_the_lord_of_winterfell"
+DO					"and_so_he_spokes"
+WHILE				"while_the_proud_lord_says"
+SWITCH				"which_house_do_you_belong_in"
+CASE 				"house"
+DEFAULT				"free_folk"
 
-RETURN			"the_lannister_send_their_regards"
+RETURN				"the_lannister_send_their_regards"
 
-SCAN			"maester_read"
-PRINT			"maester_write"
+SCAN				"maester_read"
+PRINT				"maester_write"
 
-OR 			"||"
-AND 			"&&"
-NOT 			"!"
+OR 					"||"
+AND 				"&&"
+NOT 				"!"
 
-COMP_MAIOR 		">"
-COMP_MENOR 		"<"
+COMP_MAIOR 			">"
+COMP_MENOR 			"<"
 COMP_MAIOR_IGUAL 	">="
 COMP_MENOR_IGUAL 	"<="
-COMP_IGUAL 		"=="
-COMP_DIFF		"!="
+COMP_IGUAL 			"=="
+COMP_DIFF			"!="
 
-ADICAO			"+"
-SUBTRACAO		"-"
+ADICAO				"+"
+SUBTRACAO			"-"
 MULTIPLICACAO		"*"
-DIVISAO			"/"
-MODULO			"%"
+DIVISAO				"/"
+MODULO				"%"
 
-PROTOTIPO		"squire"
+PROTOTIPO			"squire"
 
-NULL			"YOU_KNOW_NOTHING"
-BREAK			"breaker_of_chains"
+NULL				"YOU_KNOW_NOTHING"
+BREAK				"breaker_of_chains"
 DECLARAR_VAR		"its_known"
-AS 			"as"
+AS 					"as"
 
-INICIO			"When you play the game of thrones, you win or you die"
-INCLUDE			"#dracarys"
-BIB_INCLUDE		(("<")({LETRA})*(".h")?(">")|(\")({LETRA})*(".h")?(\"))
+INICIO				"When you play the game of thrones, you win or you die"
+INCLUDE				"#dracarys"
+BIB_INCLUDE			(("<")({LETRA})*(".h")?(">")|(\")({LETRA})*(".h")?(\"))
 
 %%
 
@@ -153,7 +153,7 @@ BIB_INCLUDE		(("<")({LETRA})*(".h")?(">")|(\")({LETRA})*(".h")?(\"))
 {INCLUDE}			{ return TK_INCLUDE; }
 {BIB_INCLUDE}		{ yylval = Atributo(yytext); return TK_BIB_INCLUDE; }
 
-{ID}				{return TK_ID;}
+{ID}				{ yylval = Atributo(yytext); return TK_ID;}
 
 .					{ return *yytext; }
 

@@ -2,8 +2,11 @@
 
 #include <string>
 #include <iostream>
+#include <sstream>
 #include <stdio.h>
 #include <stdlib.h>
+#include <map>
+#include <vector>
 
 using namespace std;
 
@@ -25,14 +28,45 @@ struct Atributo {
     this->c = c;
   }
 };
+struct SimboloVariavel{
+  string nome;
+  Tipo t;
+  int escopo;
 
-#define YYSTYPE Atributo
+  SimboloVariavel(){}
+  SimboloVariavel(string nome, string tipo, int escopo){this->nome = nome; this->t = tipo; this->escopo = escopo;}
+};
+
+#define YYSTYPE   Atributo
+
+#define COLOR_RED     "\x1B[31m"
+#define COLOR_RESET   "\x1B[0m"
+
+#define C_INT     "int"
+#define C_DOUBLE  "double"
+#define C_FLOAT   "float"
+#define C_CHAR    "char"
+#define C_STRING  "string"
+#define C_BOOL    "bool"
+#define C_VOID    "void"
 
 void yyerror(const char*);
+void erro(string msg);
 int yylex();
 int yyparse();
 
+vector<string> &split(const string &s, char delim, vector<string> &elems);
+vector<string> split(const string &s, char delim);
+string toStr(int n);
 string gerarIncludeC(string bib);
+string declararVariavel(string tipo, string vars, int escopo);
+void inserirVariavelTabela(string tipo, string nome, int escopo);
+bool buscaVariavelDeclarada(string tipo, string nome, int escopo);
+
+int escopoAtual = 0;
+
+typedef map<string, SimboloVariavel> TSV; // TabelaSimbolosVariavel: Key ==> contat(escopo,nomeVar);
+TSV tabelaSimbolosVariavel;
 
 %}
 
@@ -64,6 +98,7 @@ S : TK_INICIO INCLUDES PROT VARS_GLOBAIS FUNCOES MAIN FUNCOES
         << $2.c << "#include <stdio.h>\n"
                    "#include <stdlib.h>\n"
                    "#include <string.h>\n"
+        << $4.c
         << $6.c;
       }
   ;
@@ -86,13 +121,13 @@ PROT : TK_PROTOTIPO TIPO TK_ID '(' LISTA_ARGUMENTOS ')' ';' PROT {}
      | {}
      ;
 
-TIPO : TK_INT
-     | TK_DOUBLE
-     | TK_FLOAT
-     | TK_STRING
-     | TK_CHAR
-     | TK_BOOL
-     | TK_VOID
+TIPO : TK_INT     { $$ = Atributo(C_INT);     }
+     | TK_DOUBLE  { $$ = Atributo(C_DOUBLE);  }
+     | TK_FLOAT   { $$ = Atributo(C_FLOAT);   }
+     | TK_STRING  { $$ = Atributo(C_STRING);  }
+     | TK_CHAR    { $$ = Atributo(C_CHAR);    }
+     | TK_BOOL    { $$ = Atributo(C_BOOL);    }
+     | TK_VOID    { $$ = Atributo(C_VOID);    }
      ;
 
 LISTA_ARGUMENTOS : ARGUMENTOS
@@ -103,15 +138,16 @@ ARGUMENTOS : TIPO TK_ID ARRAY ',' ARGUMENTOS
            | TIPO TK_ID ARRAY
            ;
 
-VARS_GLOBAIS : VAR_GLOBAL ';' VARS_GLOBAIS
-             |
+VARS_GLOBAIS : VAR_GLOBAL ';' VARS_GLOBAIS { $$ = Atributo();  $$.c = $1.c + ";\n" + $3.c; }
+             | { $$ = Atributo(); }
              ;
 
-VAR_GLOBAL : TK_DECLARAR_VAR LISTA_IDS TK_AS TIPO
+VAR_GLOBAL : TK_DECLARAR_VAR LISTA_IDS TK_AS TIPO { $$ = Atributo(); $$.c = declararVariavel($4.v, $2.c, 0); }
            ;
 
-LISTA_IDS : TK_ID ARRAY ',' LISTA_IDS
-          | TK_ID ARRAY;
+LISTA_IDS : TK_ID ARRAY ',' LISTA_IDS { $$ = Atributo(); $$.c = $1.v + "," + $4.c; } // FALTA ARRAY
+          | TK_ID ARRAY { $$ = Atributo(); $$.c = $1.v; }
+          ;
 
 ARRAY : '[' TK_CTE_INT ']' ARRAY
       |
@@ -242,12 +278,63 @@ int contadorLinha = 1;
 
 void yyerror( const char* st ){
   puts( st );
-  //cout << "Perto de " << yytext;
-  printf( "Na linha: %d. Perto de: '%s'\n", contadorLinha, yytext );
+  printf( "[%sERRO%s] Na linha: %d. Perto de: '%s'\n", COLOR_RED, COLOR_RESET, contadorLinha, yytext );
+}
+
+void erro(string msg){
+  yyerror(msg.c_str());
+  exit(0);
+}
+
+string toStr(int n){
+  char buf[1024] = "";
+  sprintf( buf, "%d", n );
+  return buf;
 }
 
 string gerarIncludeC(string bib){
   return "#include "+bib+"\n";
+}
+
+string declararVariavel(string tipo, string vars, int escopo){
+  vector<string> vetorVars = split(vars, ',');
+  string codigo = tipo + " " + vars;
+
+  for(int i = 0; i < vetorVars.size(); i++)
+    inserirVariavelTabela(tipo, vetorVars.at(i), escopo);
+
+  return codigo;
+}
+
+void inserirVariavelTabela(string tipo, string nome, int escopo){
+  if(!buscaVariavelDeclarada(tipo, nome, escopo)){
+    tabelaSimbolosVariavel[toStr(escopo)+nome] = SimboloVariavel(nome, tipo, escopo);
+  }
+  else{
+    erro("Variavel ja definida: " + nome +"\n");
+  }
+}
+
+bool buscaVariavelDeclarada(string tipo, string nome, int escopo){
+  if(tabelaSimbolosVariavel.find(toStr(escopo) + nome) != tabelaSimbolosVariavel.end())
+    return true;
+  else
+    return false;
+}
+
+vector<string> &split(const string &s, char delim, vector<string> &elems){
+    stringstream ss(s);
+    string item;
+    while (getline(ss, item, delim)) {
+        elems.push_back(item);
+    }
+    return elems;
+}
+
+vector<string> split(const string &s, char delim){
+    vector<string> elems;
+    split(s, delim, elems);
+    return elems;
 }
 
 int main( int argc, char* argv[] ){

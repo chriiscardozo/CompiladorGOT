@@ -1412,7 +1412,7 @@ YY_RULE_SETUP
 case 58:
 YY_RULE_SETUP
 #line 156 "trabalho.lex"
-{return TK_ID;}
+{ yylval = Atributo(yytext); return TK_ID;}
 	YY_BREAK
 case 59:
 YY_RULE_SETUP
