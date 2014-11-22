@@ -6,14 +6,16 @@ When you play the game of thrones, you win or you die
 ITS_KNOWN a, b AS Stark;
 
 Stark foo() {
-    ITS_KNOWN a, b AS Stark;
-    a+b;
 }
 
 First_of_his_name()
 
-ITS_KNOWN a, b, c AS Stark;
-
-(a+c*b) + (a/c);
+    ITS_KNOWN a, b AS Stark;
+    a+b;
 
 and_now_his_watch_is_ended
+
+Stark bar() {
+    ITS_KNOWN c, d AS tully;
+    a+c+b*d;
+}

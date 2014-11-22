@@ -7,21 +7,24 @@
 #include <stdlib.h>
 #include <string.h>
 
-int a,b;
+int a_0, b_0;
 
 int foo() {
-  int temp_int_0;
-  temp_int_0 = a + b;
 }
 
 int main() {
-  int temp_int_0;
-  int temp_int_1;
-  int temp_int_2;
-  int temp_int_3;
-  temp_int_0 = c * b;
-  temp_int_1 = a + temp_int_0;
-  temp_int_2 = a / c;
-  temp_int_3 = temp_int_1 + temp_int_2;
-  return 0;
+    int temp_int_0;
+    int a_1, b_1;
+    temp_int_0 = a_1 + b_1;
+    return 0;
+}
+
+int bar() {
+    int temp_int_0;
+    int temp_int_1;
+    int temp_int_2;
+    float c_2, d_2;
+    temp_int_0 = a_0 + c_2;
+    temp_int_1 = b_0 * d_2;
+    temp_int_2 = temp_int_0 + temp_int_1;
 }
