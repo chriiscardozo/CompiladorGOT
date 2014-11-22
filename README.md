@@ -20,7 +20,7 @@ O arquivo got.lang possui as definições de highlighting. Copie-o para /usr/sha
 
 A frase inicial é obrigatória para um programa escrito em got. A função principal é declarada com first_of_his_name() e seu bloco é finalizado sempre com and_now_his_watch_is_ended.
 
-+ Utilizando #dracarys <somelib>, é possível incluir bibliotecas C/C++ logo após a frase inicial do programa.
++ Utilizando #dracarys <somelib>, é possível incluir biblioteca C logo após a frase inicial do programa.
 
 
 ## Tipos
