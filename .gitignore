@@ -26,3 +26,11 @@
 *.exe
 *.out
 *.app
+
+# Backup / Swap files
+*~
+
+# Compiled files
+lex.yy.c
+y.tab.c
+trabalho
