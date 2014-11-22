@@ -11,30 +11,29 @@
 using namespace std;
 
 struct Tipo {
-  string nome;
+    string nome;
 
-  Tipo(){}
-  Tipo(string nome){ this->nome = nome; }
+    Tipo(){}
+    Tipo(string nome) : nome(nome) {}
 };
+
 struct Atributo {
-  string v; // Valor
-  Tipo t;   // Tipo
-  string c; // Código
+    string v; // Valor
+    Tipo t;   // Tipo
+    string c; // Código
 
-  Atributo(){}
-  Atributo(string v, string t="", string c =""){
-    this->v = v;
-    this->t.nome = t;
-    this->c = c;
-  }
+    Atributo(){}
+    Atributo(string v, string t="", string c ="") : v(v), t(t), c(c) {}
 };
-struct SimboloVariavel{
-  string nome;
-  Tipo t;
-  int escopo;
 
-  SimboloVariavel(){}
-  SimboloVariavel(string nome, string tipo, int escopo){this->nome = nome; this->t = tipo; this->escopo = escopo;}
+struct SimboloVariavel{
+    string nome;
+    Tipo t;
+    int bloco;
+
+    SimboloVariavel(){}
+    SimboloVariavel(string nome, string tipo, int bloco)
+        : nome(nome), t(tipo), bloco(bloco) {}
 };
 
 #define YYSTYPE   Atributo
@@ -57,18 +56,26 @@ void erro(string msg);
 int yylex();
 int yyparse();
 
-vector<string> &split(const string &s, char delim, vector<string> &elems);
 vector<string> split(const string &s, char delim);
 string toStr(int n);
+
 string gerarIncludeC(string bib);
-string declararVariavel(string tipo, string vars, int escopo);
-void inserirVariavelTabela(string tipo, string nome, int escopo);
-bool buscaVariavelDeclarada(string tipo, string nome, int escopo);
+string declararVariavel(string tipo, string vars, int bloco);
+void inserirVariavelTabela(string tipo, string nome, int bloco);
+bool buscaVariavelDeclarada(string tipo, string nome, int bloco);
 
-int escopoAtual = 0;
+void inicializaResultadoOperador();
+Tipo tipoResultado(const Tipo &a, string op, const Tipo &b);
+void resetVarsTemp();
+string geraCodigoVarsTemp();
+string geraVarTemp(const Tipo &t);
+void geraCodigoOperadorBinario(Atributo &SS, const Atributo &S1, const Atributo &S2, const Atributo &S3);
 
-typedef map<string, SimboloVariavel> TSV; // TabelaSimbolosVariavel: Key ==> contat(escopo,nomeVar);
+int id_bloco = 1;
+
+typedef map<string, SimboloVariavel> TSV; // TabelaSimbolosVariavel: Key ==> contat(bloco,nomeVar);
 TSV tabelaSimbolosVariavel;
+vector<TSV> tabelaSimbolos;
 
 %}
 
@@ -100,27 +107,54 @@ S : TK_INICIO INCLUDES PROT VARS_GLOBAIS FUNCOES MAIN FUNCOES
         << $2.c << "#include <stdio.h>\n"
                    "#include <stdlib.h>\n"
                    "#include <string.h>\n"
-        << $4.c
-        << $6.c;
+        << "\n"
+        << $3.c // prototipos
+        << $4.c // vars_globais
+        << $5.c // funcoes
+        << $6.c // main
+        << $7.c // funcoes
+        ;
       }
   ;
 
-MAIN : TK_MAIN CORPO TK_TERMINA_MAIN { $$ = Atributo(); $$.c = "int main(){\n" + $2.c + "  return 0;\n}\n"; }
+MAIN : TK_MAIN CORPO TK_TERMINA_MAIN
+        {
+            $$ = Atributo();
+            $$.c = "\n"
+                   "int main() {\n" +
+                   geraCodigoVarsTemp() +
+                   $2.c +
+                   "  return 0;\n"
+                   "}\n";
+            resetVarsTemp();
+            id_bloco++;
+        }
      ;
 
-FUNCOES : FUNCAO FUNCOES
-        |
+FUNCOES : FUNCAO FUNCOES { $$.c = $1.c + $2.c; }
+        | { $$ = Atributo(); }
         ;
 
 FUNCAO : TIPO TK_ID '(' LISTA_ARGUMENTOS ')' BLOCO
+        {
+            // TODO falta argumentos!
+            $$ = Atributo();
+            $$.c = "\n" +
+                   $1.v + " " + $2.v + "(" + $4.c + ") {\n" +
+                   geraCodigoVarsTemp() +
+                   $6.c +
+                   "}\n";
+            resetVarsTemp();
+            id_bloco++;
+        }
        ;
 
 INCLUDES : TK_INCLUDE TK_BIB_INCLUDE INCLUDES { $$ = Atributo(); $$.c = gerarIncludeC($2.v) + $3.c;}
          | { $$ = Atributo(); }
          ;
 
-PROT : TK_PROTOTIPO TIPO TK_ID '(' LISTA_ARGUMENTOS ')' ';' PROT {}
-     | {}
+PROT : TK_PROTOTIPO TIPO TK_ID '(' LISTA_ARGUMENTOS ')' ';' PROT
+     | { $$ = Atributo(); }
      ;
 
 TIPO : TK_INT     { $$ = Atributo(C_INT);     }
@@ -133,7 +167,7 @@ TIPO : TK_INT     { $$ = Atributo(C_INT);     }
      ;
 
 LISTA_ARGUMENTOS : ARGUMENTOS
-                 |
+                 | { $$ = Atributo(); }
                  ;
 
 ARGUMENTOS : TIPO TK_ID ARRAY ',' ARGUMENTOS
@@ -156,24 +190,30 @@ ARRAY : '[' TK_CTE_INT ']' ARRAY
       ;
 
 BLOCO : TK_COMECA_BLOCO CORPO TK_TERMINA_BLOCO
+        {
+            $$.c = $2.c;
+        }
       | TK_COMECA_FUNCAO CORPO TK_TERMINA_FUNCAO
+        {
+            $$.c = $2.c;
+        }
       ;
 
-CORPO : VARS_LOCAIS COMANDOS
+CORPO : VARS_LOCAIS COMANDOS { $$.c = $1.c + $2.c; }
       ;
 
 VARS_LOCAIS : VAR_LOCAL ';' VARS_LOCAIS
-            |
+            | { $$ = Atributo(); }
             ;
 
 VAR_LOCAL : TK_DECLARAR_VAR LISTA_IDS TK_AS TIPO
           ;
 
-COMANDOS : COMANDO COMANDOS
-         |
+COMANDOS : COMANDO COMANDOS { $$.c = $1.c + $2.c; }
+         | { $$ = Atributo(); }
          ;
 
-COMANDO : EXPRESSAO ';'
+COMANDO : EXPRESSAO ';' { $$.c = $1.c; }
         | COMANDO_IF
         | COMANDO_WHILE
         | COMANDO_DO_WHILE ';'
@@ -183,8 +223,8 @@ COMANDO : EXPRESSAO ';'
         | COMANDO_SCAN ';'
         | COMANDO_PRINT ';'
         | COMANDO_BREAK ';'
-        | ';'
         | TK_COMECA_BLOCO CORPO TK_TERMINA_BLOCO
+        | ';'
         ;
 
 COMANDO_BREAK : TK_BREAK
@@ -194,7 +234,7 @@ CHAMADA_FUNCAO : TK_ID '(' LISTA_PARAMETROS ')'
                ;
 
 LISTA_PARAMETROS : PARAMETROS
-                 |
+                 | { $$ = Atributo(); }
                  ;
 
 PARAMETROS : EXPRESSAO ',' PARAMETROS
@@ -202,22 +242,36 @@ PARAMETROS : EXPRESSAO ',' PARAMETROS
            ;
 
 EXPRESSAO : EXPRESSAO TK_ADICAO EXPRESSAO
+            { geraCodigoOperadorBinario($$, $1, $2, $3); }
           | EXPRESSAO TK_SUBTRACAO EXPRESSAO
+            { geraCodigoOperadorBinario($$, $1, $2, $3); }
           | EXPRESSAO TK_MULTIPLICACAO EXPRESSAO
+            { geraCodigoOperadorBinario($$, $1, $2, $3); }
           | EXPRESSAO TK_DIVISAO EXPRESSAO
+            { geraCodigoOperadorBinario($$, $1, $2, $3); }
           | EXPRESSAO TK_MODULO EXPRESSAO
+            { geraCodigoOperadorBinario($$, $1, $2, $3); }
           | EXPRESSAO TK_COMP_MENOR EXPRESSAO
+            { geraCodigoOperadorBinario($$, $1, $2, $3); }
           | EXPRESSAO TK_COMP_MAIOR EXPRESSAO
+            { geraCodigoOperadorBinario($$, $1, $2, $3); }
           | EXPRESSAO TK_COMP_MENOR_IGUAL EXPRESSAO
+            { geraCodigoOperadorBinario($$, $1, $2, $3); }
           | EXPRESSAO TK_COMP_MAIOR_IGUAL EXPRESSAO
+            { geraCodigoOperadorBinario($$, $1, $2, $3); }
           | EXPRESSAO TK_COMP_IGUAL EXPRESSAO
+            { geraCodigoOperadorBinario($$, $1, $2, $3); }
           | EXPRESSAO TK_COMP_DIFF EXPRESSAO
+            { geraCodigoOperadorBinario($$, $1, $2, $3); }
           | EXPRESSAO TK_OR EXPRESSAO
+            { geraCodigoOperadorBinario($$, $1, $2, $3); }
           | EXPRESSAO TK_AND EXPRESSAO
+            { geraCodigoOperadorBinario($$, $1, $2, $3); }
           | TK_NOT EXPRESSAO
           | TK_ID ARRAY TK_ATRIBUICAO EXPRESSAO
           | CHAMADA_FUNCAO
           | TERMINAL
+            { $$ = $1; }
           ;
 
 TERMINAL : TK_ID ARRAY
@@ -228,8 +282,9 @@ TERMINAL : TK_ID ARRAY
          | TK_CTE_STRING
          | TK_CTE_BOOL_TRUE
          | TK_CTE_BOOL_FALSE
-         | '(' EXPRESSAO ')'
          | TK_NULL
+         | '(' EXPRESSAO ')'
+            { $$ = $2; }
          ;
 
 COMANDO_IF : TK_IF '(' EXPRESSAO ')' BLOCO
@@ -246,7 +301,7 @@ COMANDO_FOR : TK_FOR '(' EXPRESSAO_FOR ';' EXPRESSAO_FOR ';' EXPRESSAO_FOR ')' B
             ;
 
 EXPRESSAO_FOR : EXPRESSAO
-              |
+              | { $$ = Atributo(); }
               ;
 
 COMANDO_SWITCH : TK_SWITCH '(' EXPRESSAO ')' TK_COMECA_BLOCO LISTA_CASE TK_TERMINA_BLOCO
@@ -276,84 +331,198 @@ COMANDO_PRINT : TK_PRINT '(' EXPRESSAO ')'
 
 int contadorLinha = 1;
 
+map<string, Tipo> resultadoOperador;
+map<string, int> n_var_temp;
+
+void inicializaResultadoOperador() {
+    // +
+    resultadoOperador["int+int"] = Tipo("int");
+    resultadoOperador["double+double"] = Tipo("double");
+    resultadoOperador["float+float"] = Tipo("float");
+    resultadoOperador["double+int"] = Tipo("double");
+    resultadoOperador["int+double"] = Tipo("double");
+
+    // -
+    resultadoOperador["int-int"] = Tipo("int");
+    resultadoOperador["double-double"] = Tipo("double");
+    resultadoOperador["float-float"] = Tipo("float");
+    resultadoOperador["double-int"] = Tipo("double");
+    resultadoOperador["int-double"] = Tipo("double");
+
+    // *
+    resultadoOperador["int*int"] = Tipo("int");
+    resultadoOperador["double*double"] = Tipo("double");
+    resultadoOperador["float*float"] = Tipo("float");
+    resultadoOperador["double*int"] = Tipo("double");
+    resultadoOperador["int*double"] = Tipo("double");
+
+    // /
+    resultadoOperador["int/int"] = Tipo("int");
+    resultadoOperador["double/double"] = Tipo("double");
+    resultadoOperador["float/float"] = Tipo("float");
+    resultadoOperador["double/int"] = Tipo("double");
+    resultadoOperador["int/double"] = Tipo("double");
+
+    // <
+    resultadoOperador["int<int"] = Tipo("bool");
+    resultadoOperador["double<double"] = Tipo("bool");
+    resultadoOperador["float<float"] = Tipo("bool");
+    resultadoOperador["double<int"] = Tipo("bool");
+    resultadoOperador["int<double"] = Tipo("bool");
+
+    // >
+    resultadoOperador["int>int"] = Tipo("bool");
+    resultadoOperador["double>double"] = Tipo("bool");
+    resultadoOperador["float>float"] = Tipo("bool");
+    resultadoOperador["double>int"] = Tipo("bool");
+    resultadoOperador["int>double"] = Tipo("bool");
+
+    // <=
+    resultadoOperador["int<=int"] = Tipo("bool");
+    resultadoOperador["double<=double"] = Tipo("bool");
+    resultadoOperador["float<=float"] = Tipo("bool");
+    resultadoOperador["double<=int"] = Tipo("bool");
+    resultadoOperador["int<=double"] = Tipo("bool");
+
+    // >=
+    resultadoOperador["int>=int"] = Tipo("bool");
+    resultadoOperador["double>=double"] = Tipo("bool");
+    resultadoOperador["float>=float"] = Tipo("bool");
+    resultadoOperador["double>=int"] = Tipo("bool");
+    resultadoOperador["int>=double"] = Tipo("bool");
+
+    // ==
+    resultadoOperador["int==int"] = Tipo("bool");
+    resultadoOperador["double==double"] = Tipo("bool");
+    resultadoOperador["float==float"] = Tipo("bool");
+    resultadoOperador["double==int"] = Tipo("bool");
+    resultadoOperador["int==double"] = Tipo("bool");
+
+    // !=
+    resultadoOperador["int!=int"] = Tipo("bool");
+    resultadoOperador["double!=double"] = Tipo("bool");
+    resultadoOperador["float!=float"] = Tipo("bool");
+    resultadoOperador["double!=int"] = Tipo("bool");
+    resultadoOperador["int!=double"] = Tipo("bool");
+
+    // ||
+    resultadoOperador["bool||bool"] = Tipo("bool");
+
+    // &&
+    resultadoOperador["bool&&bool"] = Tipo("bool");
+}
+
 #include "lex.yy.c"
 
 void yyerror( const char* st ){
-  puts( st );
-  printf( "[%sERRO%s] Na linha: %d. Perto de: '%s'\n", COLOR_RED, COLOR_RESET, contadorLinha, yytext );
+    puts( st );
+    printf( "[%sERRO%s] Na linha: %d. Perto de: '%s'\n", COLOR_RED, COLOR_RESET, contadorLinha, yytext );
 }
 
 void erro(string msg){
-  yyerror(msg.c_str());
-  exit(0);
+    yyerror(msg.c_str());
+    exit(0);
 }
 
 string toStr(int n){
-  char buf[1024] = "";
-  sprintf( buf, "%d", n );
-  return buf;
+    char buf[1024] = "";
+    sprintf( buf, "%d", n );
+    return buf;
 }
 
 string gerarIncludeC(string bib){
-  return "#include "+bib+"\n";
+    return "#include "+bib+"\n";
 }
 
-string declararVariavel(string tipo, string vars, int escopo){
-  vector<string> vetorVars = split(vars, ',');
-  string codigo =  tipo + " ";
-  string decl = vars;
-
-  if(tipo == C_STRING){
-    codigo = string(C_CHAR) + " ";
-    decl = "";
-  }
-
-  for(int i = 0; i < vetorVars.size(); i++){
-    inserirVariavelTabela(tipo, vetorVars.at(i), escopo);
+string declararVariavel(string tipo, string vars, int bloco){
+    vector<string> vetorVars = split(vars, ',');
+    string codigo = tipo + " ";
+    string decl = vars;
 
     if(tipo == C_STRING){
-      decl = decl + vetorVars.at(i) + "[" + toStr(MAX_STR) +"]";
-      if(i+1 < vetorVars.size())
-        decl = decl + ",";
+        codigo = string(C_CHAR) + " ";
+        decl = "";
     }
-  }
 
-  codigo = codigo + decl;
-  return codigo;
-}
+    for(int i = 0; i < vetorVars.size(); i++){
+        inserirVariavelTabela(tipo, vetorVars[i], bloco);
 
-void inserirVariavelTabela(string tipo, string nome, int escopo){
-  if(!buscaVariavelDeclarada(tipo, nome, escopo)){
-    tabelaSimbolosVariavel[toStr(escopo)+nome] = SimboloVariavel(nome, tipo, escopo);
-  }
-  else{
-    erro("Variavel ja definida: " + nome +"\n");
-  }
-}
-
-bool buscaVariavelDeclarada(string tipo, string nome, int escopo){
-  if(tabelaSimbolosVariavel.find(toStr(escopo) + nome) != tabelaSimbolosVariavel.end())
-    return true;
-  else
-    return false;
-}
-
-vector<string> &split(const string &s, char delim, vector<string> &elems){
-    stringstream ss(s);
-    string item;
-    while (getline(ss, item, delim)) {
-        elems.push_back(item);
+        if(tipo == C_STRING){
+            decl = decl + vetorVars[i] + "[" + toStr(MAX_STR) +"]";
+            if(i+1 < vetorVars.size())
+                decl = decl + ",";
+        }
     }
-    return elems;
+
+    codigo = codigo + decl;
+    return codigo;
+}
+
+void inserirVariavelTabela(string tipo, string nome, int bloco){
+    if(!buscaVariavelDeclarada(tipo, nome, bloco))
+        tabelaSimbolosVariavel[toStr(bloco)+nome] = SimboloVariavel(nome, tipo, bloco);
+    else
+        erro("Variavel ja definida: " + nome +"\n");
+}
+
+bool buscaVariavelDeclarada(string tipo, string nome, int bloco){
+    if(tabelaSimbolosVariavel.find(toStr(bloco) + nome) != tabelaSimbolosVariavel.end())
+        return true;
+    else
+        return false;
 }
 
 vector<string> split(const string &s, char delim){
     vector<string> elems;
-    split(s, delim, elems);
+    stringstream ss(s);
+    string item;
+    while (getline(ss, item, delim))
+        elems.push_back(item);
     return elems;
 }
 
+Tipo tipoResultado(const Tipo &a, string op, const Tipo &b) {
+    if (resultadoOperador.find(a.nome + op + b.nome) == resultadoOperador.end())
+        erro("Operacao nao permitida: " + a.nome + op + b.nome);
+    return resultadoOperador[a.nome + op + b.nome];
+}
+
+void resetVarsTemp() {
+    n_var_temp.clear();
+}
+
+string geraCodigoVarsTemp() {
+    // TODO verificar codigo depois de implementar string!
+    char buf[1024];
+    string cod;
+    for (auto it = n_var_temp.begin(); it != n_var_temp.end(); it++) {
+        for (int i = 0; i < it->second; i++) {
+            string tp = it->first;
+            if (tp == "bool")
+                tp = "int";
+            cod += "  " + tp + " temp_" + it->first + "_" + toStr(i) + ";\n";
+        }
+    }
+    return cod;
+}
+
+string geraVarTemp(const Tipo &t) {
+    return "temp_" + t.nome + "_" + toStr(n_var_temp[t.nome]++);
+}
+
+void geraCodigoOperadorBinario(Atributo &SS, const Atributo &S1, const Atributo &S2, const Atributo &S3) {
+    //SS.t = tipoResultado(S1.t, S2.v, S3.t);
+    SS.t = Tipo("int");
+    SS.v = geraVarTemp(SS.t);
+    if (SS.t.nome == C_STRING) { //TODO falta string
+    }
+    else {
+        SS.c = S1.c + S3.c +
+               "  " + SS.v + " = " + S1.v + " " + S2.v + " " + S3.v + ";\n";
+   }
+}
+
 int main( int argc, char* argv[] ){
-//  inicializaResultadoOperador();
+  inicializaResultadoOperador();
   yyparse();
 }
