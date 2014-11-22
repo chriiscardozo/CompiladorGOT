@@ -14,4 +14,4 @@ y.tab.c: trabalho.y
 	yacc trabalho.y
 
 trabalho: lex.yy.c y.tab.c
-	g++ -o trabalho y.tab.c $(FLEX)
+	g++ -std=c++11 -o trabalho y.tab.c $(FLEX)
