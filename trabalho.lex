@@ -85,21 +85,21 @@ BIB_INCLUDE         (("<")({LETRA})*(".h")?(">")|(\")({LETRA})*(".h")?(\"))
 {LINHA}             { contadorLinha++; }
 {COMENTARIO}        {}
 
-{CTE_INT}           { return TK_CTE_INT; }
-{CTE_DOUBLE}        { return TK_CTE_DOUBLE; }
-{CTE_FLOAT}         { return TK_CTE_FLOAT; }
-{CTE_CHAR}          { return TK_CTE_CHAR; }
-{CTE_STRING}        { return TK_CTE_STRING; }
-{CTE_BOOL_TRUE}     { return TK_CTE_BOOL_TRUE; }
-{CTE_BOOL_FALSE}    { return TK_CTE_BOOL_FALSE; }
+{CTE_INT}           { yylval = Atributo(yytext); return TK_CTE_INT; }
+{CTE_DOUBLE}        { yylval = Atributo(yytext); return TK_CTE_DOUBLE; }
+{CTE_FLOAT}         { yylval = Atributo(yytext); return TK_CTE_FLOAT; }
+{CTE_CHAR}          { yylval = Atributo(yytext); return TK_CTE_CHAR; }
+{CTE_STRING}        { yylval = Atributo(yytext); return TK_CTE_STRING; }
+{CTE_BOOL_TRUE}     { yylval = Atributo(yytext); return TK_CTE_BOOL_TRUE; }
+{CTE_BOOL_FALSE}    { yylval = Atributo(yytext); return TK_CTE_BOOL_FALSE; }
 
-{TIPO_INTEIRO}      { return TK_INT; }
-{TIPO_DOUBLE}       { return TK_DOUBLE; }
-{TIPO_FLOAT}        { return TK_FLOAT; }
-{TIPO_CHAR}         { return TK_CHAR; }
-{TIPO_STRING}       { return TK_STRING; }
-{TIPO_BOOL}         { return TK_BOOL; }
-{TIPO_VOID}         { return TK_VOID; }
+{TIPO_INTEIRO}      { yylval = Atributo(yytext); return TK_INT; }
+{TIPO_DOUBLE}       { yylval = Atributo(yytext); return TK_DOUBLE; }
+{TIPO_FLOAT}        { yylval = Atributo(yytext); return TK_FLOAT; }
+{TIPO_CHAR}         { yylval = Atributo(yytext); return TK_CHAR; }
+{TIPO_STRING}       { yylval = Atributo(yytext); return TK_STRING; }
+{TIPO_BOOL}         { yylval = Atributo(yytext); return TK_BOOL; }
+{TIPO_VOID}         { yylval = Atributo(yytext); return TK_VOID; }
 
 {ATRIBUICAO}        { return TK_ATRIBUICAO; }
 

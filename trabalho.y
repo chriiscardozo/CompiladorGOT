@@ -116,7 +116,7 @@ S : TK_INICIO INCLUDES PROT VARS_GLOBAIS FUNCOES MAIN FUNCOES
         << $5.c // funcoes
         << $6.c // main
         << $7.c // funcoes
-        ;
+        << endl;
       }
   ;
 
@@ -274,12 +274,19 @@ EXPRESSAO : EXPRESSAO TK_ADICAO EXPRESSAO
 TERMINAL : TK_ID ARRAY
             { $$ = buscaVariavel($1.v); }
          | TK_CTE_INT
+            { $$ = Atributo($1.v, C_INT); }
          | TK_CTE_DOUBLE
+            { $$ = Atributo($1.v, C_DOUBLE); }
          | TK_CTE_FLOAT
+            { $$ = Atributo($1.v, C_FLOAT); }
          | TK_CTE_CHAR
+            { $$ = Atributo($1.v, C_CHAR); }
          | TK_CTE_STRING
+            { $$ = Atributo($1.v, C_STRING); }
          | TK_CTE_BOOL_TRUE
+            { $$ = Atributo($1.v, C_BOOL); }
          | TK_CTE_BOOL_FALSE
+            { $$ = Atributo($1.v, C_BOOL); }
          | TK_NULL
          | '(' EXPRESSAO ')'
             { $$ = $2; }
@@ -339,6 +346,10 @@ void inicializaResultadoOperador() {
     resultadoOperador["float+float"] = Tipo("float");
     resultadoOperador["double+int"] = Tipo("double");
     resultadoOperador["int+double"] = Tipo("double");
+    resultadoOperador["float+int"] = Tipo("float");
+    resultadoOperador["int+float"] = Tipo("float");
+    resultadoOperador["double+float"] = Tipo("double");
+    resultadoOperador["float+double"] = Tipo("double");
 
     // -
     resultadoOperador["int-int"] = Tipo("int");
@@ -346,6 +357,10 @@ void inicializaResultadoOperador() {
     resultadoOperador["float-float"] = Tipo("float");
     resultadoOperador["double-int"] = Tipo("double");
     resultadoOperador["int-double"] = Tipo("double");
+    resultadoOperador["float-int"] = Tipo("float");
+    resultadoOperador["int-float"] = Tipo("float");
+    resultadoOperador["double-float"] = Tipo("double");
+    resultadoOperador["float-double"] = Tipo("double");
 
     // *
     resultadoOperador["int*int"] = Tipo("int");
@@ -353,6 +368,10 @@ void inicializaResultadoOperador() {
     resultadoOperador["float*float"] = Tipo("float");
     resultadoOperador["double*int"] = Tipo("double");
     resultadoOperador["int*double"] = Tipo("double");
+    resultadoOperador["float*int"] = Tipo("float");
+    resultadoOperador["int*float"] = Tipo("float");
+    resultadoOperador["double*float"] = Tipo("double");
+    resultadoOperador["float*double"] = Tipo("double");
 
     // /
     resultadoOperador["int/int"] = Tipo("int");
@@ -360,6 +379,10 @@ void inicializaResultadoOperador() {
     resultadoOperador["float/float"] = Tipo("float");
     resultadoOperador["double/int"] = Tipo("double");
     resultadoOperador["int/double"] = Tipo("double");
+    resultadoOperador["float/int"] = Tipo("float");
+    resultadoOperador["int/float"] = Tipo("float");
+    resultadoOperador["double/float"] = Tipo("double");
+    resultadoOperador["float/double"] = Tipo("double");
 
     // <
     resultadoOperador["int<int"] = Tipo("bool");
@@ -367,6 +390,10 @@ void inicializaResultadoOperador() {
     resultadoOperador["float<float"] = Tipo("bool");
     resultadoOperador["double<int"] = Tipo("bool");
     resultadoOperador["int<double"] = Tipo("bool");
+    resultadoOperador["float<int"] = Tipo("bool");
+    resultadoOperador["int<float"] = Tipo("bool");
+    resultadoOperador["double<float"] = Tipo("double");
+    resultadoOperador["float<double"] = Tipo("double");
 
     // >
     resultadoOperador["int>int"] = Tipo("bool");
@@ -374,6 +401,10 @@ void inicializaResultadoOperador() {
     resultadoOperador["float>float"] = Tipo("bool");
     resultadoOperador["double>int"] = Tipo("bool");
     resultadoOperador["int>double"] = Tipo("bool");
+    resultadoOperador["float>int"] = Tipo("bool");
+    resultadoOperador["int>float"] = Tipo("bool");
+    resultadoOperador["double>float"] = Tipo("double");
+    resultadoOperador["float>double"] = Tipo("double");
 
     // <=
     resultadoOperador["int<=int"] = Tipo("bool");
@@ -381,6 +412,10 @@ void inicializaResultadoOperador() {
     resultadoOperador["float<=float"] = Tipo("bool");
     resultadoOperador["double<=int"] = Tipo("bool");
     resultadoOperador["int<=double"] = Tipo("bool");
+    resultadoOperador["float<=int"] = Tipo("bool");
+    resultadoOperador["int<=float"] = Tipo("bool");
+    resultadoOperador["double<=float"] = Tipo("double");
+    resultadoOperador["float<=double"] = Tipo("double");
 
     // >=
     resultadoOperador["int>=int"] = Tipo("bool");
@@ -388,6 +423,10 @@ void inicializaResultadoOperador() {
     resultadoOperador["float>=float"] = Tipo("bool");
     resultadoOperador["double>=int"] = Tipo("bool");
     resultadoOperador["int>=double"] = Tipo("bool");
+    resultadoOperador["float>=int"] = Tipo("bool");
+    resultadoOperador["int>=float"] = Tipo("bool");
+    resultadoOperador["double>=float"] = Tipo("double");
+    resultadoOperador["float>=double"] = Tipo("double");
 
     // ==
     resultadoOperador["int==int"] = Tipo("bool");
@@ -395,6 +434,10 @@ void inicializaResultadoOperador() {
     resultadoOperador["float==float"] = Tipo("bool");
     resultadoOperador["double==int"] = Tipo("bool");
     resultadoOperador["int==double"] = Tipo("bool");
+    resultadoOperador["float==int"] = Tipo("bool");
+    resultadoOperador["int==float"] = Tipo("bool");
+    resultadoOperador["double==float"] = Tipo("double");
+    resultadoOperador["float==double"] = Tipo("double");
 
     // !=
     resultadoOperador["int!=int"] = Tipo("bool");
@@ -402,6 +445,10 @@ void inicializaResultadoOperador() {
     resultadoOperador["float!=float"] = Tipo("bool");
     resultadoOperador["double!=int"] = Tipo("bool");
     resultadoOperador["int!=double"] = Tipo("bool");
+    resultadoOperador["float!=int"] = Tipo("bool");
+    resultadoOperador["int!=float"] = Tipo("bool");
+    resultadoOperador["double!=float"] = Tipo("double");
+    resultadoOperador["float!=double"] = Tipo("double");
 
     // ||
     resultadoOperador["bool||bool"] = Tipo("bool");
@@ -531,8 +578,7 @@ string geraVarTemp(const Tipo &t) {
 }
 
 void geraCodigoOperadorBinario(Atributo &SS, const Atributo &S1, const Atributo &S2, const Atributo &S3) {
-    //SS.t = tipoResultado(S1.t, S2.v, S3.t);
-    SS.t = Tipo("int");
+    SS.t = tipoResultado(S1.t, S2.v, S3.t);
     SS.v = geraVarTemp(SS.t);
     if (SS.t.nome == C_STRING) { //TODO falta string
     }

@@ -20,11 +20,14 @@ int main() {
 }
 
 int bar() {
-    int temp_int_0;
-    int temp_int_1;
-    int temp_int_2;
+    double temp_double_0;
+    double temp_double_1;
+    float temp_float_0;
+    float temp_float_1;
     float c_2, d_2;
-    temp_int_0 = a_0 + c_2;
-    temp_int_1 = b_0 * d_2;
-    temp_int_2 = temp_int_0 + temp_int_1;
+    temp_float_0 = a_0 + c_2;
+    temp_float_1 = b_0 * d_2;
+    temp_double_0 = temp_float_1 / 2.0;
+    temp_double_1 = temp_float_0 + temp_double_0;
 }
+

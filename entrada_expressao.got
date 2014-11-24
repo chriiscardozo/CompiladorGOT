@@ -17,5 +17,5 @@ and_now_his_watch_is_ended
 
 Stark bar() {
     ITS_KNOWN c, d AS tully;
-    a+c+b*d;
+    a+c+b*d / 2.0;
 }
