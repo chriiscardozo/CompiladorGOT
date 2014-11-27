@@ -369,11 +369,11 @@ void inicializaResultadoOperador() {
     resultadoOperador["double+float"] = Tipo("double");
     resultadoOperador["float+double"] = Tipo("double");
     resultadoOperador["string+string"] = Tipo("string");
-//    resultadoOperador["string+char"] = Tipo("string");
-//    resultadoOperador["char+string"] = Tipo("string");
-//    resultadoOperador["char+char"] = Tipo("string");
-//    resultadoOperador["char+int"] = Tipo("char");
-//    resultadoOperador["int+char"] = Tipo("int"); char ? O.o
+    resultadoOperador["string+char"] = Tipo("string");
+    resultadoOperador["char+string"] = Tipo("string");
+    resultadoOperador["char+char"] = Tipo("string");
+    resultadoOperador["char+int"] = Tipo("char");
+    resultadoOperador["int+char"] = Tipo("char");
 
 
     // -
@@ -386,6 +386,8 @@ void inicializaResultadoOperador() {
     resultadoOperador["int-float"] = Tipo("float");
     resultadoOperador["double-float"] = Tipo("double");
     resultadoOperador["float-double"] = Tipo("double");
+    resultadoOperador["char-int"] = Tipo("char");
+    resultadoOperador["int-char"] = Tipo("char");
 
     // *
     resultadoOperador["int*int"] = Tipo("int");
@@ -417,9 +419,12 @@ void inicializaResultadoOperador() {
     resultadoOperador["int<double"] = Tipo("bool");
     resultadoOperador["float<int"] = Tipo("bool");
     resultadoOperador["int<float"] = Tipo("bool");
-    resultadoOperador["double<float"] = Tipo("double"); // ?
-    resultadoOperador["float<double"] = Tipo("double"); // ?
-    resultadoOperador["string<string"] = Tipo("");
+    resultadoOperador["double<float"] = Tipo("bool");
+    resultadoOperador["float<double"] = Tipo("bool");
+    resultadoOperador["string<string"] = Tipo("bool");
+    resultadoOperador["char<char"] = Tipo("bool");
+    resultadoOperador["char<int"] = Tipo("bool");
+    resultadoOperador["int<char"] = Tipo("bool");
 
     // >
     resultadoOperador["int>int"] = Tipo("bool");
@@ -429,8 +434,12 @@ void inicializaResultadoOperador() {
     resultadoOperador["int>double"] = Tipo("bool");
     resultadoOperador["float>int"] = Tipo("bool");
     resultadoOperador["int>float"] = Tipo("bool");
-    resultadoOperador["double>float"] = Tipo("double");
-    resultadoOperador["float>double"] = Tipo("double");
+    resultadoOperador["double>float"] = Tipo("bool");
+    resultadoOperador["float>double"] = Tipo("bool");
+    resultadoOperador["string>string"] = Tipo("bool");
+    resultadoOperador["char>char"] = Tipo("bool");
+    resultadoOperador["char>int"] = Tipo("bool");
+    resultadoOperador["int>char"] = Tipo("bool");
 
     // <=
     resultadoOperador["int<=int"] = Tipo("bool");
@@ -440,8 +449,12 @@ void inicializaResultadoOperador() {
     resultadoOperador["int<=double"] = Tipo("bool");
     resultadoOperador["float<=int"] = Tipo("bool");
     resultadoOperador["int<=float"] = Tipo("bool");
-    resultadoOperador["double<=float"] = Tipo("double");
-    resultadoOperador["float<=double"] = Tipo("double");
+    resultadoOperador["double<=float"] = Tipo("bool");
+    resultadoOperador["float<=double"] = Tipo("bool");
+    resultadoOperador["string<=string"] = Tipo("bool");
+    resultadoOperador["char<=char"] = Tipo("bool");
+    resultadoOperador["char<=int"] = Tipo("bool");
+    resultadoOperador["int<=char"] = Tipo("bool");
 
     // >=
     resultadoOperador["int>=int"] = Tipo("bool");
@@ -451,8 +464,12 @@ void inicializaResultadoOperador() {
     resultadoOperador["int>=double"] = Tipo("bool");
     resultadoOperador["float>=int"] = Tipo("bool");
     resultadoOperador["int>=float"] = Tipo("bool");
-    resultadoOperador["double>=float"] = Tipo("double");
-    resultadoOperador["float>=double"] = Tipo("double");
+    resultadoOperador["double>=float"] = Tipo("bool");
+    resultadoOperador["float>=double"] = Tipo("bool");
+    resultadoOperador["string>=string"] = Tipo("bool");
+    resultadoOperador["char>=char"] = Tipo("bool");
+    resultadoOperador["char>=int"] = Tipo("bool");
+    resultadoOperador["int>=char"] = Tipo("bool");
 
     // ==
     resultadoOperador["int==int"] = Tipo("bool");
@@ -462,8 +479,12 @@ void inicializaResultadoOperador() {
     resultadoOperador["int==double"] = Tipo("bool");
     resultadoOperador["float==int"] = Tipo("bool");
     resultadoOperador["int==float"] = Tipo("bool");
-    resultadoOperador["double==float"] = Tipo("double");
-    resultadoOperador["float==double"] = Tipo("double");
+    resultadoOperador["double==float"] = Tipo("bool");
+    resultadoOperador["float==double"] = Tipo("bool");
+    resultadoOperador["string==string"] = Tipo("bool");
+    resultadoOperador["char==char"] = Tipo("bool");
+    resultadoOperador["char==int"] = Tipo("bool");
+    resultadoOperador["int==char"] = Tipo("bool");
 
     // !=
     resultadoOperador["int!=int"] = Tipo("bool");
@@ -473,14 +494,24 @@ void inicializaResultadoOperador() {
     resultadoOperador["int!=double"] = Tipo("bool");
     resultadoOperador["float!=int"] = Tipo("bool");
     resultadoOperador["int!=float"] = Tipo("bool");
-    resultadoOperador["double!=float"] = Tipo("double");
-    resultadoOperador["float!=double"] = Tipo("double");
+    resultadoOperador["double!=float"] = Tipo("bool");
+    resultadoOperador["float!=double"] = Tipo("bool");
+    resultadoOperador["string!=string"] = Tipo("bool");
+    resultadoOperador["char!=char"] = Tipo("bool");
+    resultadoOperador["char!=int"] = Tipo("bool");
+    resultadoOperador["int!=char"] = Tipo("bool");
 
     // ||
     resultadoOperador["bool||bool"] = Tipo("bool");
 
     // &&
     resultadoOperador["bool&&bool"] = Tipo("bool");
+
+    // !
+    resultadoOperador["!bool"] = Tipo("bool");
+
+    // %
+    resultadoOperador["int%int"] = Tipo("int");
 }
 
 #include "lex.yy.c"
