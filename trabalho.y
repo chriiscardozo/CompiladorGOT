@@ -58,7 +58,7 @@ void erro(string msg);
 int yylex();
 int yyparse();
 
-int id_bloco = 1;
+int id_bloco = -1;
 
 typedef map<string, SimboloVariavel> TSV;
 vector<TSV> tabelaVariaveis;
@@ -72,6 +72,7 @@ void inserirVariavelTabela(TSV &tabela, string tipo, string nome, int bloco);
 bool variavelDeclarada(const TSV &tabela, string nome);
 Atributo buscaVariavel(string nome);
 void removerBlocoVars();
+void adicionarNovaTabelaVariaveis();
 
 void inicializaResultadoOperador();
 Tipo tipoResultado(const Tipo &a, string op, const Tipo &b);
@@ -113,14 +114,13 @@ S : TK_INICIO INCLUDES PROT VARS_GLOBAIS FUNCOES MAIN FUNCOES
         << "\n"
         << $3.c // prototipos
         << $4.c // vars_globais
-        << $5.c // funcoes
+        << $5.c + $7.c // funcoes
         << $6.c // main
-        << $7.c // funcoes
         << endl;
       }
   ;
 
-MAIN : TK_MAIN CORPO TK_TERMINA_MAIN
+MAIN : COMECA_MAIN CORPO TK_TERMINA_MAIN
         {
             $$ = Atributo();
             $$.c = "\n"
@@ -133,6 +133,9 @@ MAIN : TK_MAIN CORPO TK_TERMINA_MAIN
             removerBlocoVars();
         }
      ;
+
+COMECA_MAIN : TABELA_VARS TK_MAIN
+	    ;
 
 FUNCOES : FUNCAO FUNCOES { $$.c = $1.c + $2.c; }
         | { $$ = Atributo(); }
@@ -148,7 +151,6 @@ FUNCAO : TIPO TK_ID '(' LISTA_ARGUMENTOS ')' BLOCO
                    $6.c +
                    "}\n";
             resetVarsTemp();
-            removerBlocoVars();
         }
        ;
 
@@ -177,9 +179,12 @@ ARGUMENTOS : TIPO TK_ID ARRAY ',' ARGUMENTOS
            | TIPO TK_ID ARRAY
            ;
 
-VARS_GLOBAIS : VAR_GLOBAL VARS_GLOBAIS { $$ = Atributo();  $$.c = $1.c + $2.c; }
+VARS_GLOBAIS : TABELA_VARS VAR_GLOBAL VARS_GLOBAIS { $$ = Atributo();  $$.c = $1.c + $2.c; }
              | { $$ = Atributo(); }
              ;
+
+TABELA_VARS : { adicionarNovaTabelaVariaveis(); }
+	    ;
 
 VAR_GLOBAL : TK_DECLARAR_VAR LISTA_IDS TK_AS TIPO ';' { $$ = Atributo(); $$.c = declararVariavel($4.v, $2.c, 0) + ";\n"; }
            ;
@@ -192,9 +197,13 @@ ARRAY : '[' TK_CTE_INT ']' ARRAY
       | { $$ = Atributo(); }
       ;
 
-BLOCO : TK_COMECA_BLOCO CORPO TK_TERMINA_BLOCO      { $$.c = $2.c; }
-      | TK_COMECA_FUNCAO CORPO TK_TERMINA_FUNCAO    { $$.c = $2.c; }
+BLOCO : COMECA_BLOCO CORPO TK_TERMINA_BLOCO      { $$.c = $2.c; removerBlocoVars(); }
+      | COMECA_BLOCO CORPO TK_TERMINA_FUNCAO   	 { $$.c = $2.c; removerBlocoVars(); }
       ;
+
+COMECA_BLOCO : TABELA_VARS TK_COMECA_BLOCO  { }
+	     | TABELA_VARS TK_COMECA_FUNCAO { }
+	     ;
 
 CORPO : VARS_LOCAIS COMANDOS { $$.c = $1.c + $2.c; }
       ;
@@ -220,7 +229,7 @@ COMANDO : EXPRESSAO ';' { $$.c = $1.c; }
         | COMANDO_SCAN ';'
         | COMANDO_PRINT ';'
         | COMANDO_BREAK ';'
-        | TK_COMECA_BLOCO CORPO TK_TERMINA_BLOCO
+        | BLOCO	{ $$.c = $1.c; }
         | ';'
         ;
 
@@ -488,7 +497,8 @@ string declararVariavel(string tipo, string vars, int bloco) {
     else
         codigo += tipo + " ";
 
-    TSV tabela;
+    TSV &tabela = tabelaVariaveis.back(); // Tabela do topo da pilha
+
     for (int i = 0; i < vetorVars.size(); i++) {
         if (i > 0) codigo += ", ";
 
@@ -501,14 +511,13 @@ string declararVariavel(string tipo, string vars, int bloco) {
             codigo += nomeVar;
     }
 
-    tabelaVariaveis.push_back(tabela);
     return codigo;
 }
 
 void inserirVariavelTabela(TSV &tabela, string tipo, string nome, int bloco){
     string nome_bloco = nome + "_" + toStr(bloco);
-    if (!variavelDeclarada(tabela, nome_bloco))
-        tabela[nome] = SimboloVariavel(nome_bloco, tipo, bloco);
+    if (!variavelDeclarada(tabela, nome_bloco)) 
+        tabela[nome] = SimboloVariavel(nome_bloco, tipo, bloco);// TODO acho que aqui é [nome_bloco]
     else
         erro("Variavel ja definida: " + nome + "\n");
 }
@@ -531,12 +540,13 @@ Atributo buscaVariavel(string nome) {
 void removerBlocoVars() {
     if (tabelaVariaveis.empty())
         return;
-    const TSV &bloco = tabelaVariaveis.back();
-    auto it = bloco.begin();
-    if (it != bloco.end() && it->second.bloco == id_bloco) {
-        tabelaVariaveis.pop_back();
-        id_bloco++;
-    }
+    tabelaVariaveis.pop_back();
+}
+
+void adicionarNovaTabelaVariaveis(){
+	TSV tabela;
+	tabelaVariaveis.push_back(tabela);
+	id_bloco++;
 }
 
 vector<string> split(string s, char delim){
