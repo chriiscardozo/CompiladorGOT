@@ -516,8 +516,8 @@ string declararVariavel(string tipo, string vars, int bloco) {
 
 void inserirVariavelTabela(TSV &tabela, string tipo, string nome, int bloco){
     string nome_bloco = nome + "_" + toStr(bloco);
-    if (!variavelDeclarada(tabela, nome_bloco)) 
-        tabela[nome] = SimboloVariavel(nome_bloco, tipo, bloco);// TODO acho que aqui é [nome_bloco]
+    if (!variavelDeclarada(tabela, nome)) 
+        tabela[nome] = SimboloVariavel(nome_bloco, tipo, bloco);
     else
         erro("Variavel ja definida: " + nome + "\n");
 }
