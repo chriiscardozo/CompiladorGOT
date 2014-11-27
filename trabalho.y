@@ -59,6 +59,8 @@ int yylex();
 int yyparse();
 
 int id_bloco = -1;
+string codigoVarsProcedimento = "";
+
 
 typedef map<string, SimboloVariavel> TSV;
 vector<TSV> tabelaVariaveis;
@@ -73,6 +75,9 @@ bool variavelDeclarada(const TSV &tabela, string nome);
 Atributo buscaVariavel(string nome);
 void removerBlocoVars();
 void adicionarNovaTabelaVariaveis();
+
+void adicionarVariaveisProcedimento(string codigo);
+void resetVariaveisProcedimento();
 
 void inicializaResultadoOperador();
 Tipo tipoResultado(const Tipo &a, string op, const Tipo &b);
@@ -126,11 +131,13 @@ MAIN : COMECA_MAIN CORPO TK_TERMINA_MAIN
             $$.c = "\n"
                    "int main() {\n" +
                    geraCodigoVarsTemp() +
+                   codigoVarsProcedimento + '\n' +
                    $2.c +
-                   TAB "return 0;\n"
+                   '\n' + TAB + "return 0;\n"
                    "}\n";
             resetVarsTemp();
             removerBlocoVars();
+            resetVariaveisProcedimento();
         }
      ;
 
@@ -148,9 +155,11 @@ FUNCAO : TIPO TK_ID '(' LISTA_ARGUMENTOS ')' BLOCO
             $$.c = "\n" +
                    $1.v + " " + $2.v + "(" + $4.c + ") {\n" +
                    geraCodigoVarsTemp() +
+                   codigoVarsProcedimento + '\n' +
                    $6.c +
                    "}\n";
             resetVarsTemp();
+            resetVariaveisProcedimento();
         }
        ;
 
@@ -205,7 +214,7 @@ COMECA_BLOCO : TABELA_VARS TK_COMECA_BLOCO  { }
 	     | TABELA_VARS TK_COMECA_FUNCAO { }
 	     ;
 
-CORPO : VARS_LOCAIS COMANDOS { $$.c = $1.c + $2.c; }
+CORPO : VARS_LOCAIS COMANDOS { adicionarVariaveisProcedimento($1.c); $$.c = $2.c; }
       ;
 
 VARS_LOCAIS : VAR_LOCAL VARS_LOCAIS  { $$ = Atributo(); $$.c = $1.c + $2.c; }
@@ -359,6 +368,13 @@ void inicializaResultadoOperador() {
     resultadoOperador["int+float"] = Tipo("float");
     resultadoOperador["double+float"] = Tipo("double");
     resultadoOperador["float+double"] = Tipo("double");
+    resultadoOperador["string+string"] = Tipo("string");
+//    resultadoOperador["string+char"] = Tipo("string");
+//    resultadoOperador["char+string"] = Tipo("string");
+//    resultadoOperador["char+char"] = Tipo("string");
+//    resultadoOperador["char+int"] = Tipo("char");
+//    resultadoOperador["int+char"] = Tipo("int"); char ? O.o
+
 
     // -
     resultadoOperador["int-int"] = Tipo("int");
@@ -401,8 +417,9 @@ void inicializaResultadoOperador() {
     resultadoOperador["int<double"] = Tipo("bool");
     resultadoOperador["float<int"] = Tipo("bool");
     resultadoOperador["int<float"] = Tipo("bool");
-    resultadoOperador["double<float"] = Tipo("double");
-    resultadoOperador["float<double"] = Tipo("double");
+    resultadoOperador["double<float"] = Tipo("double"); // ?
+    resultadoOperador["float<double"] = Tipo("double"); // ?
+    resultadoOperador["string<string"] = Tipo("");
 
     // >
     resultadoOperador["int>int"] = Tipo("bool");
@@ -585,6 +602,13 @@ string geraCodigoVarsTemp() {
 
 string geraVarTemp(const Tipo &t) {
     return "temp_" + t.nome + "_" + toStr(n_var_temp[t.nome]++);
+}
+
+void adicionarVariaveisProcedimento(string codigo){
+  codigoVarsProcedimento = codigoVarsProcedimento + codigo;
+}
+void resetVariaveisProcedimento(){
+  codigoVarsProcedimento = "";
 }
 
 void geraCodigoOperadorBinario(Atributo &SS, const Atributo &S1, const Atributo &S2, const Atributo &S3) {
