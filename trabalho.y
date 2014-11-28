@@ -76,6 +76,8 @@ vector<string> split(string s, char delim);
 string toStr(int n);
 void replaceAll( string &s, const string &search, const string &replace );
 
+string validarAcessoArray(string var, string dims);
+vector<string> traduzDimensoesArray(string aux);
 string gerarIncludeC(string bib);
 string declararVariavel(string tipo_base, string vars, int bloco);
 void inserirVariavelTabela(TSV &tabela, Tipo tipo, string nome, int bloco);
@@ -298,7 +300,9 @@ EXPRESSAO : EXPRESSAO TK_ADICAO EXPRESSAO
           ;
 
 TERMINAL : TK_ID ARRAY
-            { $$ = buscaVariavel($1.v); }
+            { $$ = buscaVariavel($1.v); string posicaoAcesso = validarAcessoArray($1.v, $2.c); 
+              $$.v = $$.v + posicaoAcesso;
+            }
          | TK_CTE_INT
             { $$ = Atributo($1.v, C_INT); }
          | TK_CTE_DOUBLE
@@ -314,6 +318,7 @@ TERMINAL : TK_ID ARRAY
          | TK_CTE_BOOL_FALSE
             { $$ = Atributo($1.v, C_BOOL); }
          | TK_NULL
+            {  }
          | '(' EXPRESSAO ')'
             { $$ = $2; }
          ;
@@ -366,6 +371,20 @@ map<string, Tipo> resultadoOperador;
 map<string, int> n_var_temp;
 
 void inicializaResultadoOperador() {
+    // = 
+    resultadoOperador["int=int"] = Tipo("int");
+    resultadoOperador["double=double"] = Tipo("double");
+    resultadoOperador["float=float"] = Tipo("float");
+    resultadoOperador["double=int"] = Tipo("double");
+    resultadoOperador["float=int"] = Tipo("float");
+    resultadoOperador["double=float"] = Tipo("double");
+    resultadoOperador["string=string"] = Tipo("string");
+    resultadoOperador["string=char"] = Tipo("string");
+    resultadoOperador["char=char"] = Tipo("char");
+    resultadoOperador["char=int"] = Tipo("char");
+    resultadoOperador["int=char"] = Tipo("int");
+    resultadoOperador["bool=bool"] = Tipo("bool");
+
     // +
     resultadoOperador["int+int"] = Tipo("int");
     resultadoOperador["double+double"] = Tipo("double");
@@ -562,12 +581,13 @@ string declararVariavel(string tipo_base, string vars, int bloco) {
         Tipo tipo_verificado = tipo_base;
         string nome_verificado = vetorVars[i];
 
-        if(vetorVars[i].find("[") != string::npos ){
-          string aux = vetorVars[i];
-          replaceAll(aux, "[", ",");
-          replaceAll(aux, "]", "");
+        if(vetorVars[i].find("[") != string::npos ){          
+          vector<string> dims = traduzDimensoesArray(vetorVars[i]);
+          
+          
+          if(dims.size() > 3)
+            erro("Array com dimensoes invalidas. (Max = 2 dimensoes)");
 
-          vector<string> dims = split(aux, ',');
           // posições geradas pelo split => [ 0 => var_nome, 1 =>  dim1, 2 =>  dim2]
           if(dims.size() > 2){
             tipo_verificado.ndim = 2;
@@ -605,6 +625,52 @@ string declararVariavel(string tipo_base, string vars, int bloco) {
     }
 
     return codigo;
+}
+
+vector<string> traduzDimensoesArray(string aux){
+  replaceAll(aux, "[", ",");
+  replaceAll(aux, "]", "");
+  vector<string> dims = split(aux, ',');
+
+  return dims;
+}
+
+string validarAcessoArray(string var, string dims){
+  string codigo = "";
+  vector<string> dimsAcesso = traduzDimensoesArray(dims);
+
+  Atributo variavel = buscaVariavel(var);
+
+  if(dimsAcesso.size() > 0){
+    if(dimsAcesso.size()-1 != variavel.t.ndim){
+      erro("Acesso de indice invalido: A variavel " + var + " possui " + toStr(variavel.t.ndim) \
+        + " dimensoes. Você usou " + toStr(dimsAcesso.size()) + " dimensoes. Use a quantidade correta.");
+    }
+
+    for(int i = 1; i < dimsAcesso.size(); i++){
+      if(atoi(dimsAcesso[i].c_str()) >= variavel.t.t_dim[i-1]
+          || atoi(dimsAcesso[i].c_str()) < 0)
+        erro("Indice fora dos limites. Tentou acessar posição " +  dimsAcesso[i] + " no total de " + toStr(variavel.t.t_dim[i-1]) + "(de 0 a " + toStr(variavel.t.t_dim[i-1]-1) + ") na dimensao " + toStr(i-1));
+    }
+
+    if(variavel.t.ndim == 1)
+      codigo = "[" + dimsAcesso[1] + "]";
+    else{
+      int posicao;
+
+      posicao = variavel.t.t_dim[1]*atoi(dimsAcesso[1].c_str()) + atoi(dimsAcesso[2].c_str());
+
+      codigo = "[" + toStr(posicao) + "]";
+    }
+      
+  }
+  else{
+    if(variavel.t.ndim > 0)
+      erro("Falta especificar indice do array: " + var);
+  }
+
+  // TODO verificar caso de array de strings
+  return codigo;
 }
 
 void inserirVariavelTabela(TSV &tabela, Tipo tipo, string nome, int bloco){
