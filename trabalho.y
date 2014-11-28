@@ -12,9 +12,14 @@ using namespace std;
 
 struct Tipo {
     string nome;
+    int ndim; // ndim == 0 ? não é array : é array;
+    int t_dim[2];
 
     Tipo(){}
-    Tipo(string nome) : nome(nome) {}
+    Tipo(string nome, int ndim = 0, int t_dim1 = 0, int t_dim2 = 0) : nome(nome), ndim(ndim) {
+      t_dim[0] = t_dim1;
+      t_dim[1] = t_dim2;
+    }
 };
 
 struct Atributo {
@@ -34,6 +39,8 @@ struct SimboloVariavel{
 
     SimboloVariavel(){}
     SimboloVariavel(string nome, string tipo, int bloco)
+        : nome(nome), t(tipo), bloco(bloco) {}
+    SimboloVariavel(string nome, Tipo tipo, int bloco)
         : nome(nome), t(tipo), bloco(bloco) {}
 };
 
@@ -67,10 +74,11 @@ vector<TSV> tabelaVariaveis;
 
 vector<string> split(string s, char delim);
 string toStr(int n);
+void replaceAll( string &s, const string &search, const string &replace );
 
 string gerarIncludeC(string bib);
-string declararVariavel(string tipo, string vars, int bloco);
-void inserirVariavelTabela(TSV &tabela, string tipo, string nome, int bloco);
+string declararVariavel(string tipo_base, string vars, int bloco);
+void inserirVariavelTabela(TSV &tabela, Tipo tipo, string nome, int bloco);
 bool variavelDeclarada(const TSV &tabela, string nome);
 Atributo buscaVariavel(string nome);
 void removerBlocoVars();
@@ -198,11 +206,11 @@ TABELA_VARS : { adicionarNovaTabelaVariaveis(); }
 VAR_GLOBAL : TK_DECLARAR_VAR LISTA_IDS TK_AS TIPO ';' { $$ = Atributo(); $$.c = declararVariavel($4.v, $2.c, 0) + ";\n"; }
            ;
 
-LISTA_IDS : TK_ID ARRAY ',' LISTA_IDS { $$ = Atributo(); $$.c = $1.v + "," + $4.c; } // FALTA ARRAY
-          | TK_ID ARRAY { $$ = Atributo(); $$.c = $1.v; }
+LISTA_IDS : TK_ID ARRAY ',' LISTA_IDS { $$ = Atributo(); $$.c = $1.v + $2.c + "," + $4.c; } // FALTA ARRAY
+          | TK_ID ARRAY { $$ = Atributo(); $$.c = $1.v + $2.c; }
           ;
 
-ARRAY : '[' TK_CTE_INT ']' ARRAY
+ARRAY : '[' TK_CTE_INT ']' ARRAY { $$ = Atributo(); $$.c = "[" + $2.v + "]" + $4.c; }
       | { $$ = Atributo(); }
       ;
 
@@ -536,14 +544,14 @@ string gerarIncludeC(string bib){
     return "#include " + bib + "\n";
 }
 
-string declararVariavel(string tipo, string vars, int bloco) {
+string declararVariavel(string tipo_base, string vars, int bloco) {
     vector<string> vetorVars = split(vars, ',');
 
     string codigo = bloco ? TAB : "";
-    if (tipo == C_STRING)
+    if (tipo_base == C_STRING)
         codigo += string(C_CHAR) + " ";
     else
-        codigo += tipo + " ";
+        codigo += tipo_base + " ";
 
     TSV &tabela = tabelaVariaveis.back(); // Tabela do topo da pilha
 
@@ -551,18 +559,55 @@ string declararVariavel(string tipo, string vars, int bloco) {
         if (i > 0) codigo += ", ";
 
         string nomeVar = vetorVars[i] + "_" + toStr(bloco);
-        inserirVariavelTabela(tabela, tipo, vetorVars[i], bloco);
+        Tipo tipo_verificado = tipo_base;
+        string nome_verificado = vetorVars[i];
 
-        if (tipo == C_STRING)
-            codigo += nomeVar + "[" + toStr(MAX_STR) +"]";
+        if(vetorVars[i].find("[") != string::npos ){
+          string aux = vetorVars[i];
+          replaceAll(aux, "[", ",");
+          replaceAll(aux, "]", "");
+
+          vector<string> dims = split(aux, ',');
+          // posições geradas pelo split => [ 0 => var_nome, 1 =>  dim1, 2 =>  dim2]
+          if(dims.size() > 2){
+            tipo_verificado.ndim = 2;
+            tipo_verificado.t_dim[0] = atoi(dims[1].c_str());
+            tipo_verificado.t_dim[1] = atoi(dims[2].c_str());
+          }
+          else{
+            tipo_verificado.ndim = 1;
+            tipo_verificado.t_dim[0] = atoi(dims[1].c_str());
+          }
+          nome_verificado = dims[0];
+        }
+
+        inserirVariavelTabela(tabela, tipo_verificado, nome_verificado, bloco);
+
+        int qtd_elementos = 0;
+
+        if(tipo_verificado.ndim == 1)
+          qtd_elementos = tipo_verificado.t_dim[0];
+        else if(tipo_verificado.ndim == 2)
+          qtd_elementos = tipo_verificado.t_dim[0] * tipo_verificado.t_dim[1];
+
+
+        if (tipo_base == C_STRING)
+          if(qtd_elementos > 0)
+            qtd_elementos = qtd_elementos * MAX_STR;
+          else
+            qtd_elementos = MAX_STR;
+
+        if(qtd_elementos > 0)
+          codigo = codigo + nome_verificado + "_" + toStr(bloco) + "[" + toStr(qtd_elementos) + "]";
         else
-            codigo += nomeVar;
+          codigo = codigo + nome_verificado + "_" + toStr(bloco);;
+
     }
 
     return codigo;
 }
 
-void inserirVariavelTabela(TSV &tabela, string tipo, string nome, int bloco){
+void inserirVariavelTabela(TSV &tabela, Tipo tipo, string nome, int bloco){
     string nome_bloco = nome + "_" + toStr(bloco);
     if (!variavelDeclarada(tabela, nome)) 
         tabela[nome] = SimboloVariavel(nome_bloco, tipo, bloco);
@@ -604,6 +649,17 @@ vector<string> split(string s, char delim){
     while (getline(ss, item, delim))
         elems.push_back(item);
     return elems;
+}
+
+void replaceAll( string &s, const string &search, const string &replace ) {
+    for( size_t pos = 0; ; pos += replace.length() ) {
+        // Locate the substring to replace
+        pos = s.find( search, pos );
+        if( pos == string::npos ) break;
+        // Replace by erasing and inserting
+        s.erase( pos, search.length() );
+        s.insert( pos, replace );
+    }
 }
 
 Tipo tipoResultado(const Tipo &a, string op, const Tipo &b) {

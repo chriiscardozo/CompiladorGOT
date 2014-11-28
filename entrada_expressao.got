@@ -12,7 +12,7 @@ Stark foo() {
 First_of_his_name()
 
     ITS_KNOWN a, b AS Stark;
-    ITS_KNOWN z AS Lannister;
+    ITS_KNOWN x[2][5][3][4][20], z[10], y[3][5] AS Lannister;
     #HODOR ITS_KNOWN a AS Lannister; DESCOMENTAR PARA DAR ERRO DE JA DEFINIDA
     a+c;
     
@@ -20,7 +20,7 @@ First_of_his_name()
 	   ITS_KNOWN a, b AS Baratheon;
 	   a+b+c+d;
 	   {
-		
+		  ITS_KNOWN vetor_string[10] AS Targaryen;
 	   }
     }
 
