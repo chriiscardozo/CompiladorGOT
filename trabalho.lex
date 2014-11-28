@@ -101,7 +101,7 @@ BIB_INCLUDE         (("<")({LETRA})*(".h")?(">")|(\")({LETRA})*(".h")?(\"))
 {TIPO_BOOL}         { yylval = Atributo(yytext); return TK_BOOL; }
 {TIPO_VOID}         { yylval = Atributo(yytext); return TK_VOID; }
 
-{ATRIBUICAO}        { return TK_ATRIBUICAO; }
+{ATRIBUICAO}        { yylval = Atributo(yytext); return TK_ATRIBUICAO; }
 
 {PRINCIPAL_FUNCAO}  { return TK_MAIN; }
 {COMECA_BLOCO}      { return TK_COMECA_BLOCO; }

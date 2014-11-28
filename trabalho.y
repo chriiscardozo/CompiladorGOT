@@ -294,6 +294,11 @@ EXPRESSAO : EXPRESSAO TK_ADICAO EXPRESSAO
             { geraCodigoOperadorBinario($$, $1, $2, $3); }
           | TK_NOT EXPRESSAO
           | TK_ID ARRAY TK_ATRIBUICAO EXPRESSAO
+            { 
+              Atributo A = buscaVariavel($1.v);
+              string posicaoAcesso = validarAcessoArray($1.v, $2.c); 
+              A.v = A.v + posicaoAcesso;
+              geraCodigoOperadorBinario($$, A, $3, $4); } // TODO Falta atribuir para array
           | CHAMADA_FUNCAO
           | TERMINAL
             { $$ = $1; }
@@ -314,9 +319,9 @@ TERMINAL : TK_ID ARRAY
          | TK_CTE_STRING
             { $$ = Atributo($1.v, C_STRING); }
          | TK_CTE_BOOL_TRUE
-            { $$ = Atributo($1.v, C_BOOL); }
+            { $$ = Atributo(/*$1.v*/"1", C_BOOL); }
          | TK_CTE_BOOL_FALSE
-            { $$ = Atributo($1.v, C_BOOL); }
+            { $$ = Atributo(/*$1.v*/"0", C_BOOL); }
          | TK_NULL
             {  }
          | '(' EXPRESSAO ')'
@@ -569,6 +574,8 @@ string declararVariavel(string tipo_base, string vars, int bloco) {
     string codigo = bloco ? TAB : "";
     if (tipo_base == C_STRING)
         codigo += string(C_CHAR) + " ";
+    else if(tipo_base == C_BOOL)
+        codigo += string(C_INT) + " ";
     else
         codigo += tipo_base + " ";
 
@@ -766,12 +773,26 @@ void resetVariaveisProcedimento(){
 
 void geraCodigoOperadorBinario(Atributo &SS, const Atributo &S1, const Atributo &S2, const Atributo &S3) {
     SS.t = tipoResultado(S1.t, S2.v, S3.t);
-    SS.v = geraVarTemp(SS.t);
-    if (SS.t.nome == C_STRING) { //TODO falta string
+
+    if(S2.v == "="){
+      if(S1.t.nome == C_STRING && (S3.t.nome == C_STRING || S3.t.nome == C_CHAR)){
+        // TODO implementar atribuição para strings
+        erro("Ver TODO implementar atribuicao para strings");
+      }
+      else{
+        SS.v = S1.v;
+        SS.c = S1.c + S3.c + 
+               TAB + S1.v + " = " + S3.v + ";\n";
+      }
     }
-    else {
-        SS.c = S1.c + S3.c +
-               TAB + SS.v + " = " + S1.v + " " + S2.v + " " + S3.v + ";\n";
+    else{
+      SS.v = geraVarTemp(SS.t);
+      if (SS.t.nome == C_STRING) { //TODO falta string
+      }
+      else {
+          SS.c = S1.c + S3.c +
+                 TAB + SS.v + " = " + S1.v + " " + S2.v + " " + S3.v + ";\n";
+      }  
     }
 }
 

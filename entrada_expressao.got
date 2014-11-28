@@ -11,24 +11,42 @@ Stark foo() {
 
 First_of_his_name()
 
-    ITS_KNOWN a, b AS Stark;
-    ITS_KNOWN x[2][5], z[10], y[3][5] AS Stark;
-    #HODOR ITS_KNOWN a AS Lannister; DESCOMENTAR PARA DAR ERRO DE JA DEFINIDA
-    a+c;
+    ITS_KNOWN inteiro1, inteiro2 As Stark;
+    ITS_KNOWN soma, subtracao, multiplicacao, divisao As Baratheon;
+    ITS_KNOWN verdadeiro, falso, e, ou As Martell;
 
-    5+z[4]+x[1][3]*15.5;
-    
-    {
-	   ITS_KNOWN a, b AS Baratheon;
-	   a+b+c+d;
-	   {
-		  ITS_KNOWN vetor_string[10] AS Targaryen;
-	   }
-    }
+    inteiro1 = 20;
+    inteiro2 = 10;
+
+    verdadeiro = FIRE;
+    falso = ICE;
+
+    e = verdadeiro && verdadeiro && verdadeiro && FIRE;
+    ou = falso && falso && ICE;
+
+    soma = inteiro1 + inteiro2;
+    subtracao = inteiro1 - inteiro2;
+    multiplicacao = soma * subtracao;
+    divisao = (inteiro1 + inteiro2) / (inteiro1 - inteiro2);
 
 and_now_his_watch_is_ended
 
 Stark bar() winter_is_coming
-    ITS_KNOWN c, d AS tully;
-    a+c+b*d / 2.0;
+    ITS_KNOWN d As Baratheon;
+    ITS_KNOWN a, b AS Stark;
+    ITS_KNOWN x[2][5], z[10], y[3][5] AS Stark;
+    #HODOR ITS_KNOWN a AS Lannister; DESCOMENTAR PARA DAR ERRO DE JA DEFINIDA
+
+    b = 12;
+    b = b + b;
+
+    d = 5+z[4]+x[1][3]*15.5;
+    
+    {
+       ITS_KNOWN a, b AS Baratheon;
+       a+b+c+d;
+       {
+          ITS_KNOWN vetor_string[10] AS Targaryen;
+       }
+    }
 all_functions_must_die
