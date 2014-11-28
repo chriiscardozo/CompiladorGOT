@@ -831,34 +831,36 @@ string gerarLabel() {
 string gerarCodigoIfElse(const Atributo &condicao, const Atributo &cod_if, const Atributo &cod_else) {
     if (condicao.t.nome != C_BOOL)
         erro("expressao nao booleana"); // TODO fazer uma mensagem melhor
-    string codigo = condicao.c;
+    string codigo;
     string label_if  = gerarLabel();
     string label_end = gerarLabel();
-    codigo += TAB "if (" + condicao.v + ") goto " + label_if + ";\n" +
-              cod_else.c +
-              TAB "goto " + label_end + ";\n" +
-              label_if + ":\n" +
-              cod_if.c +
-              label_end + ":\n" +
-              "\n";
+    codigo = condicao.c +
+             TAB "if (" + condicao.v + ") goto " + label_if + ";\n" +
+             cod_else.c +
+             TAB "goto " + label_end + ";\n" +
+             label_if + ":\n" +
+             cod_if.c +
+             label_end + ":\n" +
+             "\n";
     return codigo;
 }
 
 string gerarCodigoWhile(const Atributo &condicao, const Atributo &cod) {
     if (condicao.t.nome != C_BOOL)
         erro("expressao nao booleana"); // TODO fazer uma mensagem melhor
-    string codigo = condicao.c;
+    string codigo;
     string label_if  = gerarLabel();
     string label_cod = gerarLabel();
     string label_end = gerarLabel();
-    codigo += label_if + ":\n" +
-              TAB "if (" + condicao.v + ") goto " + label_cod + ";\n" +
-              TAB "goto " + label_end + ";\n" +
-              cod.c +
-              condicao.c +
-              TAB "goto " + label_if + ";\n" +
-              label_end + ":\n" +
-              "\n";
+    codigo = label_if + ":\n" +
+             condicao.c +
+             TAB "if (" + condicao.v + ") goto " + label_cod + ";\n" +
+             TAB "goto " + label_end + ";\n" +
+             label_cod + ":\n" +
+             cod.c +
+             TAB "goto " + label_if + ";\n" +
+             label_end + ":\n" +
+             "\n";
     return codigo;
 }
 
@@ -867,11 +869,11 @@ string gerarCodigoDoWhile(const Atributo &condicao, const Atributo &cod) {
         erro("expressao nao booleana"); // TODO fazer uma mensagem melhor
     string codigo;
     string label_cod = gerarLabel();
-    codigo += label_cod + ":\n" +
-              cod.c +
-              condicao.c +
-              TAB "if (" + condicao.v + ") goto " + label_cod + ";\n" +
-              "\n";
+    codigo = label_cod + ":\n" +
+             cod.c +
+             condicao.c +
+             TAB "if (" + condicao.v + ") goto " + label_cod + ";\n" +
+             "\n";
     return codigo;
 }
 
@@ -883,14 +885,13 @@ string gerarCodigoFor(const Atributo &init, const Atributo &condicao, const Atri
     string label_cod = gerarLabel();
     string label_end = gerarLabel();
     codigo = init.c +
-             condicao.c +
              label_if + ":\n" +
+             condicao.c +
              TAB "if (" + condicao.v + ") goto " + label_cod + ";\n" +
              TAB "goto " + label_end + ";\n" +
              label_cod + ":\n" +
              cod.c +
              upd.c +
-             condicao.c +
              TAB "goto " + label_if + ";\n" +
              label_end + ":\n" +
              "\n";
