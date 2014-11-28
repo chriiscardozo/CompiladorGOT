@@ -98,10 +98,10 @@ void geraCodigoOperadorBinario(Atributo &SS, const Atributo &S1, const Atributo 
 string gerarCodigoPrint(Atributo &S);
 
 string gerarLabel();
-string gerarCodigoIfElse(const Atributo &expr, const Atributo &cod_if, const Atributo &cod_else);
-string gerarCodigoWhile(const Atributo &expr, const Atributo &cod);
-string gerarCodigoDoWhile(const Atributo &expr, const Atributo &cod);
-string gerarCodigoFor(const Atributo &init, const Atributo &expr, const Atributo &upd, const Atributo &cod);
+string gerarCodigoIfElse(const Atributo &condicao, const Atributo &cod_if, const Atributo &cod_else);
+string gerarCodigoWhile(const Atributo &condicao, const Atributo &cod);
+string gerarCodigoDoWhile(const Atributo &condicao, const Atributo &cod);
+string gerarCodigoFor(const Atributo &init, const Atributo &condicao, const Atributo &upd, const Atributo &cod);
 
 %}
 
@@ -649,7 +649,6 @@ vector<string> traduzDimensoesArray(string aux) {
     replaceAll(aux, "[", ",");
     replaceAll(aux, "]", "");
     vector<string> dims = split(aux, ',');
-
     return dims;
 }
 
@@ -829,13 +828,13 @@ string gerarLabel() {
     return string("LABEL_") + toStr(id_label++);
 }
 
-string gerarCodigoIfElse(const Atributo &expr, const Atributo &cod_if, const Atributo &cod_else) {
-    if (expr.t.nome != C_BOOL)
+string gerarCodigoIfElse(const Atributo &condicao, const Atributo &cod_if, const Atributo &cod_else) {
+    if (condicao.t.nome != C_BOOL)
         erro("expressao nao booleana"); // TODO fazer uma mensagem melhor
-    string codigo = expr.c;
+    string codigo = condicao.c;
     string label_if  = gerarLabel();
     string label_end = gerarLabel();
-    codigo += TAB "if (" + expr.v + ") goto " + label_if + ";\n" +
+    codigo += TAB "if (" + condicao.v + ") goto " + label_if + ";\n" +
               cod_else.c +
               TAB "goto " + label_end + ";\n" +
               label_if + ":\n" +
@@ -845,53 +844,53 @@ string gerarCodigoIfElse(const Atributo &expr, const Atributo &cod_if, const Atr
     return codigo;
 }
 
-string gerarCodigoWhile(const Atributo &expr, const Atributo &cod) {
-    if (expr.t.nome != C_BOOL)
+string gerarCodigoWhile(const Atributo &condicao, const Atributo &cod) {
+    if (condicao.t.nome != C_BOOL)
         erro("expressao nao booleana"); // TODO fazer uma mensagem melhor
-    string codigo = expr.c;
+    string codigo = condicao.c;
     string label_if  = gerarLabel();
     string label_cod = gerarLabel();
     string label_end = gerarLabel();
     codigo += label_if + ":\n" +
-              TAB "if (" + expr.v + ") goto " + label_cod + ";\n" +
+              TAB "if (" + condicao.v + ") goto " + label_cod + ";\n" +
               TAB "goto " + label_end + ";\n" +
               cod.c +
-              expr.c +
+              condicao.c +
               TAB "goto " + label_if + ";\n" +
               label_end + ":\n" +
               "\n";
     return codigo;
 }
 
-string gerarCodigoDoWhile(const Atributo &expr, const Atributo &cod) {
-    if (expr.t.nome != C_BOOL)
+string gerarCodigoDoWhile(const Atributo &condicao, const Atributo &cod) {
+    if (condicao.t.nome != C_BOOL)
         erro("expressao nao booleana"); // TODO fazer uma mensagem melhor
     string codigo;
     string label_cod = gerarLabel();
     codigo += label_cod + ":\n" +
               cod.c +
-              expr.c +
-              TAB "if (" + expr.v + ") goto " + label_cod + ";\n" +
+              condicao.c +
+              TAB "if (" + condicao.v + ") goto " + label_cod + ";\n" +
               "\n";
     return codigo;
 }
 
-string gerarCodigoFor(const Atributo &init, const Atributo &expr, const Atributo &upd, const Atributo &cod) {
-    if (expr.t.nome != C_BOOL)
+string gerarCodigoFor(const Atributo &init, const Atributo &condicao, const Atributo &upd, const Atributo &cod) {
+    if (condicao.t.nome != C_BOOL)
         erro("expressao nao booleana"); // TODO fazer uma mensagem melhor
     string codigo;
     string label_if  = gerarLabel();
     string label_cod = gerarLabel();
     string label_end = gerarLabel();
     codigo = init.c +
-             expr.c +
+             condicao.c +
              label_if + ":\n" +
-             TAB "if (" + expr.v + ") goto " + label_cod + ";\n" +
+             TAB "if (" + condicao.v + ") goto " + label_cod + ";\n" +
              TAB "goto " + label_end + ";\n" +
              label_cod + ":\n" +
              cod.c +
              upd.c +
-             expr.c +
+             condicao.c +
              TAB "goto " + label_if + ";\n" +
              label_end + ":\n" +
              "\n";
