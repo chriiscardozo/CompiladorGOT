@@ -100,6 +100,7 @@ string gerarCodigoPrint(Atributo &S);
 string gerarLabel();
 string gerarCodigoIfElse(const Atributo &expr, const Atributo &cod_if, const Atributo &cod_else);
 string gerarCodigoWhile(const Atributo &expr, const Atributo &cod);
+string gerarCodigoDoWhile(const Atributo &expr, const Atributo &cod);
 
 %}
 
@@ -344,6 +345,7 @@ COMANDO_WHILE : TK_WHILE '(' EXPRESSAO ')' BLOCO
               ;
 
 COMANDO_DO_WHILE : TK_DO BLOCO TK_WHILE '(' EXPRESSAO ')'
+                    { $$.c = gerarCodigoDoWhile($5, $2); }
                  ;
 
 COMANDO_FOR : TK_FOR '(' EXPRESSAO_FOR ';' EXPRESSAO_FOR ';' EXPRESSAO_FOR ')' BLOCO
@@ -849,10 +851,22 @@ string gerarCodigoWhile(const Atributo &expr, const Atributo &cod) {
     codigo += label_if + ":\n" +
               TAB "if (" + expr.v + ") goto " + label_cod + ";\n" +
               TAB "goto " + label_end + ";\n" +
-              cod.c + 
+              cod.c +
               expr.c +
               TAB "goto " + label_if + ";\n" +
               label_end + ":\n";
+    return codigo;
+}
+
+string gerarCodigoDoWhile(const Atributo &expr, const Atributo &cod) {
+    if (expr.t.nome != C_BOOL)
+        erro("expressao nao booleana"); // TODO fazer uma mensagem melhor
+    string codigo;
+    string label_cod = gerarLabel();
+    codigo += label_cod + ":\n" +
+              cod.c +
+              expr.c +
+              TAB "if (" + expr.v + ") goto " + label_cod + ";\n" +
     return codigo;
 }
 

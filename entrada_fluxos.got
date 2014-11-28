@@ -21,4 +21,9 @@ First_of_his_name()
         inteiro1 = inteiro1 + 1;
     }
 
+    and_so_he_spokes {
+        multiplicacao = inteiro2 * divisao;
+        inteiro2 = inteiro2 - 1;
+    } while_the_proud_lord_says(inteiro2 > 10);
+
 and_now_his_watch_is_ended
