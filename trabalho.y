@@ -27,7 +27,7 @@ struct Atributo {
     Tipo t;   // Tipo
     string c; // Código
 
-    Atributo(){}
+    Atributo() {}
     Atributo(string v, string t = "", string c = "") : v(v), t(t), c(c) {}
     Atributo(string v, Tipo t, string c = "") : v(v), t(t), c(c) {}
 };
@@ -37,7 +37,7 @@ struct SimboloVariavel{
     Tipo t;
     int bloco;
 
-    SimboloVariavel(){}
+    SimboloVariavel() {}
     SimboloVariavel(string nome, string tipo, int bloco)
         : nome(nome), t(tipo), bloco(bloco) {}
     SimboloVariavel(string nome, Tipo tipo, int bloco)
@@ -65,9 +65,9 @@ void erro(string msg);
 int yylex();
 int yyparse();
 
-int id_bloco = -1;
+int id_bloco = 0;
 string codigoVarsProcedimento = "";
-
+int id_label = 0;
 
 typedef map<string, SimboloVariavel> TSV;
 vector<TSV> tabelaVariaveis;
@@ -96,6 +96,9 @@ string geraCodigoVarsTemp();
 string geraVarTemp(const Tipo &t);
 void geraCodigoOperadorBinario(Atributo &SS, const Atributo &S1, const Atributo &S2, const Atributo &S3);
 string gerarCodigoPrint(Atributo &S);
+
+string gerarLabel();
+string gerarCodigoIfElse(const Atributo &expr, const Atributo &cod_if, const Atributo &cod_else);
 
 %}
 
@@ -153,7 +156,7 @@ MAIN : COMECA_MAIN CORPO TK_TERMINA_MAIN
      ;
 
 COMECA_MAIN : TABELA_VARS TK_MAIN
-	    ;
+            ;
 
 FUNCOES : FUNCAO FUNCOES { $$.c = $1.c + $2.c; }
         | { $$ = Atributo(); }
@@ -204,7 +207,7 @@ VARS_GLOBAIS : TABELA_VARS VAR_GLOBAL VARS_GLOBAIS { $$ = Atributo();  $$.c = $1
              ;
 
 TABELA_VARS : { adicionarNovaTabelaVariaveis(); }
-	    ;
+            ;
 
 VAR_GLOBAL : TK_DECLARAR_VAR LISTA_IDS TK_AS TIPO ';' { $$ = Atributo(); $$.c = declararVariavel($4.v, $2.c, 0) + ";\n"; }
            ;
@@ -222,8 +225,8 @@ BLOCO : COMECA_BLOCO CORPO TK_TERMINA_BLOCO      { $$.c = $2.c; removerBlocoVars
       ;
 
 COMECA_BLOCO : TABELA_VARS TK_COMECA_BLOCO  { }
-	     | TABELA_VARS TK_COMECA_FUNCAO { }
-	     ;
+             | TABELA_VARS TK_COMECA_FUNCAO { }
+             ;
 
 CORPO : VARS_LOCAIS COMANDOS { adicionarVariaveisProcedimento($1.c); $$.c = $2.c; }
       ;
@@ -324,13 +327,15 @@ TERMINAL : TK_ID ARRAY
          | TK_CTE_BOOL_FALSE
             { $$ = Atributo(/*$1.v*/"0", C_BOOL); }
          | TK_NULL
-            {  }
+            { }
          | '(' EXPRESSAO ')'
             { $$ = $2; }
          ;
 
 COMANDO_IF : TK_IF '(' EXPRESSAO ')' BLOCO
+            { $$.c = gerarCodigoIfElse($3, $5, Atributo()); }
            | TK_IF '(' EXPRESSAO ')' BLOCO TK_ELSE BLOCO
+            { $$.c = gerarCodigoIfElse($3, $5, $7); }
            ;
 
 COMANDO_WHILE : TK_WHILE '(' EXPRESSAO ')' BLOCO
@@ -589,96 +594,93 @@ string declararVariavel(string tipo_base, string vars, int bloco) {
         Tipo tipo_verificado = tipo_base;
         string nome_verificado = vetorVars[i];
 
-        if(vetorVars[i].find("[") != string::npos ){          
-          vector<string> dims = traduzDimensoesArray(vetorVars[i]);
-          
-          
-          if(dims.size() > 3)
-            erro("Array com dimensoes invalidas. (Max = 2 dimensoes)");
+        if (vetorVars[i].find("[") != string::npos) {          
+            vector<string> dims = traduzDimensoesArray(vetorVars[i]);
 
-          // posições geradas pelo split => [ 0 => var_nome, 1 =>  dim1, 2 =>  dim2]
-          if(dims.size() > 2){
-            tipo_verificado.ndim = 2;
-            tipo_verificado.t_dim[0] = atoi(dims[1].c_str());
-            tipo_verificado.t_dim[1] = atoi(dims[2].c_str());
-          }
-          else{
-            tipo_verificado.ndim = 1;
-            tipo_verificado.t_dim[0] = atoi(dims[1].c_str());
-          }
-          nome_verificado = dims[0];
+            if (dims.size() > 3)
+                erro("Array com dimensoes invalidas. (Max = 2 dimensoes)");
+
+            // posições geradas pelo split => [ 0 => var_nome, 1 =>  dim1, 2 =>  dim2]
+            if (dims.size() > 2){
+                tipo_verificado.ndim = 2;
+                tipo_verificado.t_dim[0] = atoi(dims[1].c_str());
+                tipo_verificado.t_dim[1] = atoi(dims[2].c_str());
+            }
+            else {
+                tipo_verificado.ndim = 1;
+                tipo_verificado.t_dim[0] = atoi(dims[1].c_str());
+            }
+            nome_verificado = dims[0];
         }
 
         inserirVariavelTabela(tabela, tipo_verificado, nome_verificado, bloco);
 
         int qtd_elementos = 0;
 
-        if(tipo_verificado.ndim == 1)
-          qtd_elementos = tipo_verificado.t_dim[0];
-        else if(tipo_verificado.ndim == 2)
-          qtd_elementos = tipo_verificado.t_dim[0] * tipo_verificado.t_dim[1];
+        if (tipo_verificado.ndim == 1)
+            qtd_elementos = tipo_verificado.t_dim[0];
+        else if (tipo_verificado.ndim == 2)
+            qtd_elementos = tipo_verificado.t_dim[0] * tipo_verificado.t_dim[1];
 
+        if (tipo_base == C_STRING) {
+            if (qtd_elementos > 0)
+                qtd_elementos = qtd_elementos * MAX_STR;
+            else
+                qtd_elementos = MAX_STR;
+        }
 
-        if (tipo_base == C_STRING)
-          if(qtd_elementos > 0)
-            qtd_elementos = qtd_elementos * MAX_STR;
-          else
-            qtd_elementos = MAX_STR;
-
-        if(qtd_elementos > 0)
-          codigo = codigo + nome_verificado + "_" + toStr(bloco) + "[" + toStr(qtd_elementos) + "]";
+        if (qtd_elementos > 0)
+            codigo = codigo + nome_verificado + "_" + toStr(bloco) + "[" + toStr(qtd_elementos) + "]";
         else
-          codigo = codigo + nome_verificado + "_" + toStr(bloco);;
-
+            codigo = codigo + nome_verificado + "_" + toStr(bloco);;
     }
 
     return codigo;
 }
 
-vector<string> traduzDimensoesArray(string aux){
-  replaceAll(aux, "[", ",");
-  replaceAll(aux, "]", "");
-  vector<string> dims = split(aux, ',');
+vector<string> traduzDimensoesArray(string aux) {
+    replaceAll(aux, "[", ",");
+    replaceAll(aux, "]", "");
+    vector<string> dims = split(aux, ',');
 
-  return dims;
+    return dims;
 }
 
-string validarAcessoArray(string var, string dims){
-  string codigo = "";
-  vector<string> dimsAcesso = traduzDimensoesArray(dims);
+string validarAcessoArray(string var, string dims) {
+    string codigo = "";
+    vector<string> dimsAcesso = traduzDimensoesArray(dims);
 
-  Atributo variavel = buscaVariavel(var);
+    Atributo variavel = buscaVariavel(var);
 
-  if(dimsAcesso.size() > 0){
-    if(dimsAcesso.size()-1 != variavel.t.ndim){
-      erro("Acesso de indice invalido: A variavel " + var + " possui " + toStr(variavel.t.ndim) \
-        + " dimensoes. Você usou " + toStr(dimsAcesso.size()) + " dimensoes. Use a quantidade correta.");
+    if (dimsAcesso.size() > 0) {
+        if (dimsAcesso.size()-1 != variavel.t.ndim) {
+            erro("Acesso de indice invalido: A variavel " + var + " possui " + toStr(variavel.t.ndim) +
+                " dimensoes. Você usou " + toStr(dimsAcesso.size()) + " dimensoes. Use a quantidade correta.");
+        }
+
+        for(int i = 1; i < dimsAcesso.size(); i++){
+            if(atoi(dimsAcesso[i].c_str()) >= variavel.t.t_dim[i-1]
+                || atoi(dimsAcesso[i].c_str()) < 0)
+                erro("Indice fora dos limites. Tentou acessar posição " +  dimsAcesso[i] + " no total de " + toStr(variavel.t.t_dim[i-1]) +
+                    "(de 0 a " + toStr(variavel.t.t_dim[i-1]-1) + ") na dimensao " + toStr(i-1));
+        }
+
+        if (variavel.t.ndim == 1) {
+            codigo = "[" + dimsAcesso[1] + "]";
+        }
+        else {
+            int posicao;
+            posicao = variavel.t.t_dim[1]*atoi(dimsAcesso[1].c_str()) + atoi(dimsAcesso[2].c_str());
+            codigo = "[" + toStr(posicao) + "]";
+        }
+    }
+    else {
+        if (variavel.t.ndim > 0)
+            erro("Falta especificar indice do array: " + var);
     }
 
-    for(int i = 1; i < dimsAcesso.size(); i++){
-      if(atoi(dimsAcesso[i].c_str()) >= variavel.t.t_dim[i-1]
-          || atoi(dimsAcesso[i].c_str()) < 0)
-        erro("Indice fora dos limites. Tentou acessar posição " +  dimsAcesso[i] + " no total de " + toStr(variavel.t.t_dim[i-1]) + "(de 0 a " + toStr(variavel.t.t_dim[i-1]-1) + ") na dimensao " + toStr(i-1));
-    }
-
-    if(variavel.t.ndim == 1)
-      codigo = "[" + dimsAcesso[1] + "]";
-    else{
-      int posicao;
-
-      posicao = variavel.t.t_dim[1]*atoi(dimsAcesso[1].c_str()) + atoi(dimsAcesso[2].c_str());
-
-      codigo = "[" + toStr(posicao) + "]";
-    }
-      
-  }
-  else{
-    if(variavel.t.ndim > 0)
-      erro("Falta especificar indice do array: " + var);
-  }
-
-  // TODO verificar caso de array de strings
-  return codigo;
+    // TODO verificar caso de array de strings
+    return codigo;
 }
 
 void inserirVariavelTabela(TSV &tabela, Tipo tipo, string nome, int bloco){
@@ -711,9 +713,9 @@ void removerBlocoVars() {
 }
 
 void adicionarNovaTabelaVariaveis(){
-	TSV tabela;
-	tabelaVariaveis.push_back(tabela);
-	id_bloco++;
+    TSV tabela;
+    tabelaVariaveis.push_back(tabela);
+    id_bloco++;
 }
 
 vector<string> split(string s, char delim){
@@ -765,35 +767,35 @@ string geraVarTemp(const Tipo &t) {
     return "temp_" + t.nome + "_" + toStr(n_var_temp[t.nome]++);
 }
 
-void adicionarVariaveisProcedimento(string codigo){
-  codigoVarsProcedimento = codigoVarsProcedimento + codigo;
+void adicionarVariaveisProcedimento(string codigo) {
+    codigoVarsProcedimento = codigoVarsProcedimento + codigo;
 }
-void resetVariaveisProcedimento(){
-  codigoVarsProcedimento = "";
+void resetVariaveisProcedimento() {
+    codigoVarsProcedimento = "";
 }
 
 void geraCodigoOperadorBinario(Atributo &SS, const Atributo &S1, const Atributo &S2, const Atributo &S3) {
     SS.t = tipoResultado(S1.t, S2.v, S3.t);
 
-    if(S2.v == "="){
-      if(S1.t.nome == C_STRING && (S3.t.nome == C_STRING || S3.t.nome == C_CHAR)){
-        // TODO implementar atribuição para strings
-        erro("Ver TODO implementar atribuicao para strings");
-      }
-      else{
-        SS.v = S1.v;
-        SS.c = S1.c + S3.c + 
-               TAB + S1.v + " = " + S3.v + ";\n";
-      }
+    if (S2.v == "=") {
+        if (S1.t.nome == C_STRING && (S3.t.nome == C_STRING || S3.t.nome == C_CHAR)) {
+            // TODO implementar atribuição para strings
+            erro("Ver TODO implementar atribuicao para strings");
+        }
+        else {
+            SS.v = S1.v;
+            SS.c = S1.c + S3.c + 
+                   TAB + S1.v + " = " + S3.v + ";\n";
+        }
     }
-    else{
-      SS.v = geraVarTemp(SS.t);
-      if (SS.t.nome == C_STRING) { //TODO falta string
-      }
-      else {
-          SS.c = S1.c + S3.c +
-                 TAB + SS.v + " = " + S1.v + " " + S2.v + " " + S3.v + ";\n";
-      }  
+    else {
+        SS.v = geraVarTemp(SS.t);
+        if (SS.t.nome == C_STRING) { //TODO falta string
+        }
+        else {
+            SS.c = S1.c + S3.c +
+                   TAB + SS.v + " = " + S1.v + " " + S2.v + " " + S3.v + ";\n";
+        }
     }
 }
 
@@ -814,6 +816,25 @@ string gerarCodigoPrint(Atributo &S){
     codigo += "(\"%d\", " + S.v + ");\n";
 
   return codigo;
+}
+
+string gerarLabel() {
+    return string("LABEL_") + toStr(id_label++);
+}
+
+string gerarCodigoIfElse(const Atributo &expr, const Atributo &cod_if, const Atributo &cod_else) {
+    if (expr.t.nome != C_BOOL)
+        erro("expressao nao booleana");
+    string codigo = expr.c;
+    string label_if = gerarLabel();
+    string label_end = gerarLabel();
+    codigo += TAB "if (" + expr.v + ") goto " + label_if + ";\n" +
+              cod_else.c +
+              TAB "goto " + label_end + ";\n" +
+              label_if + ":\n" +
+              cod_if.c +
+              label_end + ":\n";
+    return codigo;
 }
 
 int main (int argc, char *argv[]){

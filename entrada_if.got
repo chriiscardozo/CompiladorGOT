@@ -1,0 +1,19 @@
+When you play the game of thrones, you win or you die
+
+First_of_his_name()
+
+    ITS_KNOWN inteiro1, inteiro2 As Stark;
+    ITS_KNOWN soma, subtracao, multiplicacao, divisao As Baratheon;
+    ITS_KNOWN verdadeiro, falso, e, ou As Martell;
+
+    what_do_we_say_to_death (soma < 0) {
+        ITS_KNOWN a, b AS Stark;
+        a = a+b;
+        a = a/b;
+    }
+    not_today {
+        ITS_KNOWN c, d AS Baratheon;
+        c = 3 + d;
+    }
+
+and_now_his_watch_is_ended
