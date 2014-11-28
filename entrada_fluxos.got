@@ -26,4 +26,8 @@ First_of_his_name()
         inteiro2 = inteiro2 - 1;
     } while_the_proud_lord_says(inteiro2 > 10);
 
+    for_the_lord_of_winterfell (inteiro1 = 0; inteiro1 < 10; inteiro1 = inteiro1 + 1) {
+        inteiro2 = inteiro2 + inteiro1;
+    }
+
 and_now_his_watch_is_ended

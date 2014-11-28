@@ -101,6 +101,7 @@ string gerarLabel();
 string gerarCodigoIfElse(const Atributo &expr, const Atributo &cod_if, const Atributo &cod_else);
 string gerarCodigoWhile(const Atributo &expr, const Atributo &cod);
 string gerarCodigoDoWhile(const Atributo &expr, const Atributo &cod);
+string gerarCodigoFor(const Atributo &init, const Atributo &expr, const Atributo &upd, const Atributo &cod);
 
 %}
 
@@ -149,7 +150,8 @@ MAIN : COMECA_MAIN CORPO TK_TERMINA_MAIN
                    geraCodigoVarsTemp() +
                    codigoVarsProcedimento + '\n' +
                    $2.c +
-                   '\n' + TAB + "return 0;\n"
+                   "\n" +
+                   TAB + "return 0;\n"
                    "}\n";
             resetVarsTemp();
             removerBlocoVars();
@@ -349,9 +351,10 @@ COMANDO_DO_WHILE : TK_DO BLOCO TK_WHILE '(' EXPRESSAO ')'
                  ;
 
 COMANDO_FOR : TK_FOR '(' EXPRESSAO_FOR ';' EXPRESSAO_FOR ';' EXPRESSAO_FOR ')' BLOCO
+                { $$.c = gerarCodigoFor($3, $5, $7, $9); }
             ;
 
-EXPRESSAO_FOR : EXPRESSAO
+EXPRESSAO_FOR : EXPRESSAO { $$ = $1; }
               | { $$ = Atributo(); }
               ;
 
@@ -837,7 +840,8 @@ string gerarCodigoIfElse(const Atributo &expr, const Atributo &cod_if, const Atr
               TAB "goto " + label_end + ";\n" +
               label_if + ":\n" +
               cod_if.c +
-              label_end + ":\n";
+              label_end + ":\n" +
+              "\n";
     return codigo;
 }
 
@@ -854,7 +858,8 @@ string gerarCodigoWhile(const Atributo &expr, const Atributo &cod) {
               cod.c +
               expr.c +
               TAB "goto " + label_if + ";\n" +
-              label_end + ":\n";
+              label_end + ":\n" +
+              "\n";
     return codigo;
 }
 
@@ -867,6 +872,29 @@ string gerarCodigoDoWhile(const Atributo &expr, const Atributo &cod) {
               cod.c +
               expr.c +
               TAB "if (" + expr.v + ") goto " + label_cod + ";\n" +
+              "\n";
+    return codigo;
+}
+
+string gerarCodigoFor(const Atributo &init, const Atributo &expr, const Atributo &upd, const Atributo &cod) {
+    if (expr.t.nome != C_BOOL)
+        erro("expressao nao booleana"); // TODO fazer uma mensagem melhor
+    string codigo;
+    string label_if  = gerarLabel();
+    string label_cod = gerarLabel();
+    string label_end = gerarLabel();
+    codigo = init.c +
+             expr.c +
+             label_if + ":\n" +
+             TAB "if (" + expr.v + ") goto " + label_cod + ";\n" +
+             TAB "goto " + label_end + ";\n" +
+             label_cod + ":\n" +
+             cod.c +
+             upd.c +
+             expr.c +
+             TAB "goto " + label_if + ";\n" +
+             label_end + ":\n" +
+             "\n";
     return codigo;
 }
 
