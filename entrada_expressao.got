@@ -29,6 +29,16 @@ First_of_his_name()
     multiplicacao = soma * subtracao;
     divisao = (inteiro1 + inteiro2) / (inteiro1 - inteiro2);
 
+    maester_write(inteiro1);
+    maester_write("\n");
+    maester_write(2.5);
+    maester_write("\n");
+    maester_write('A');
+    maester_write("\nTeste\n");
+    maester_write(ICE);
+    maester_write("\n");
+
+
 and_now_his_watch_is_ended
 
 Stark bar() winter_is_coming

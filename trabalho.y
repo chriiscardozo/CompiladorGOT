@@ -74,7 +74,7 @@ vector<TSV> tabelaVariaveis;
 
 vector<string> split(string s, char delim);
 string toStr(int n);
-void replaceAll( string &s, const string &search, const string &replace );
+void replaceAll(string &s, const string &search, const string &replace);
 
 string validarAcessoArray(string var, string dims);
 vector<string> traduzDimensoesArray(string aux);
@@ -95,6 +95,7 @@ void resetVarsTemp();
 string geraCodigoVarsTemp();
 string geraVarTemp(const Tipo &t);
 void geraCodigoOperadorBinario(Atributo &SS, const Atributo &S1, const Atributo &S2, const Atributo &S3);
+string gerarCodigoPrint(Atributo &S);
 
 %}
 
@@ -246,7 +247,7 @@ COMANDO : EXPRESSAO ';' { $$.c = $1.c; }
         | COMANDO_SWITCH
         | COMANDO_RETURN ';'
         | COMANDO_SCAN ';'
-        | COMANDO_PRINT ';'
+        | COMANDO_PRINT ';' { $$ = Atributo(); $$.c = $1.c; }
         | COMANDO_BREAK ';'
         | BLOCO	{ $$.c = $1.c; }
         | ';'
@@ -365,7 +366,7 @@ COMANDO_RETURN : TK_RETURN EXPRESSAO
 COMANDO_SCAN : TK_SCAN '(' TK_ID ')'
              ;
 
-COMANDO_PRINT : TK_PRINT '(' EXPRESSAO ')'
+COMANDO_PRINT : TK_PRINT '(' EXPRESSAO ')' { $$.c = gerarCodigoPrint($3); }
               ;
 
 %%
@@ -794,6 +795,25 @@ void geraCodigoOperadorBinario(Atributo &SS, const Atributo &S1, const Atributo 
                  TAB + SS.v + " = " + S1.v + " " + S2.v + " " + S3.v + ";\n";
       }  
     }
+}
+
+string gerarCodigoPrint(Atributo &S){
+  string codigo = string(TAB) + "printf";
+
+  if(S.t.nome == C_INT)
+    codigo += "(\"%d\", " + S.v + ");\n";
+  else if(S.t.nome == C_CHAR)
+    codigo += "(\"%c\", " + S.v + ");\n";
+  else if(S.t.nome == C_FLOAT)
+    codigo += "(\"%f\", " + S.v + ");\n";
+  else if(S.t.nome == C_DOUBLE)
+    codigo += "(\"%lf\", " + S.v + ");\n";
+  else if(S.t.nome == C_STRING)
+    codigo += "(\"%s\", " + S.v + ");\n";
+  else if(S.t.nome == C_BOOL)
+    codigo += "(\"%d\", " + S.v + ");\n";
+
+  return codigo;
 }
 
 int main (int argc, char *argv[]){

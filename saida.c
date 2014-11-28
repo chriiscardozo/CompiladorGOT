@@ -78,6 +78,14 @@ int main() {
     temp_int_3 = inteiro1_2 - inteiro2_2;
     temp_int_4 = temp_int_2 / temp_int_3;
     divisao_2 = temp_int_4;
+    printf("%d", inteiro1_2);
+    printf("%s", "\n");
+    printf("%lf", 2.5);
+    printf("%s", "\n");
+    printf("%c", 'A');
+    printf("%s", "\nTeste\n");
+    printf("%d", 0);
+    printf("%s", "\n");
 
     return 0;
 }
