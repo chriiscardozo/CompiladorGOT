@@ -34,3 +34,4 @@
 lex.yy.c
 y.tab.c
 trabalho
+saida.c
