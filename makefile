@@ -4,7 +4,7 @@ ifeq ($(shell uname -s), Darwin)
 endif
 
 all: trabalho entrada.got
-	./trabalho < entrada_expressao.got > saida.c
+	./trabalho < entrada_fluxos.got > saida.c
 	cat saida.c
 
 lex.yy.c: trabalho.lex

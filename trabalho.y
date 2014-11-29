@@ -60,6 +60,8 @@ struct SimboloVariavel{
 
 #define MAX_STR     256
 
+#define MAX_CASES 1000
+
 void yyerror(const char*);
 void erro(string msg);
 int yylex();
@@ -101,10 +103,13 @@ void gerarCodigoOperadorUnario(Atributo &SS, const Atributo &S1, const Atributo 
 string gerarCodigoPrint(Atributo &S);
 
 string gerarLabel();
+string geraCodigoCase(const Atributo &expressao, const Atributo &corpo);
+string gerarBreak();
 string gerarCodigoIfElse(const Atributo &condicao, const Atributo &cod_if, const Atributo &cod_else);
 string gerarCodigoWhile(const Atributo &condicao, const Atributo &cod);
 string gerarCodigoDoWhile(const Atributo &condicao, const Atributo &cod);
 string gerarCodigoFor(const Atributo &init, const Atributo &condicao, const Atributo &upd, const Atributo &cod);
+string gerarCodigoSwitch(const Atributo &condicao, Atributo &cod);
 
 %}
 
@@ -263,8 +268,6 @@ COMANDO : EXPRESSAO ';' { $$.c = $1.c; }
         | ';'
         ;
 
-COMANDO_BREAK : TK_BREAK
-              ;
 
 CHAMADA_FUNCAO : TK_ID '(' LISTA_PARAMETROS ')'
                ;
@@ -363,18 +366,25 @@ EXPRESSAO_FOR : EXPRESSAO { $$ = $1; }
               ;
 
 COMANDO_SWITCH : TK_SWITCH '(' EXPRESSAO ')' TK_COMECA_BLOCO LISTA_CASE TK_TERMINA_BLOCO
+                 { $$.c = gerarCodigoSwitch($3, $6); }
                ;
 
-LISTA_CASE : CASE LISTA_CASE
-           | DEFAULT
-           |
+LISTA_CASE : CASE LISTA_CASE { $$.c = $1.c + $2.c; }
+           | DEFAULT { $$.c = $1.c; }
+           | { $$ = Atributo(); }
            ;
 
 CASE : TK_CASE EXPRESSAO ':' CORPO
+       { $$.c = geraCodigoCase($2, $4); }
      ;
 
 DEFAULT : TK_DEFAULT ':' CORPO
+          { $$.c = $3.c; }
         ;
+
+COMANDO_BREAK : TK_BREAK
+                { $$.c = gerarBreak(); }
+              ;
 
 COMANDO_RETURN : TK_RETURN EXPRESSAO
                ;
@@ -868,6 +878,19 @@ string gerarLabel() {
     return string("LABEL_") + toStr(id_label++);
 }
 
+string geraCodigoCase(const Atributo &expressao, const Atributo &corpo) {
+    string codigo;
+    /* Por algum motivo a concatenação na mesma linha não foi no meu pc */
+    codigo += "[";
+    codigo +=  (expressao.c[4] == 't') ? ( "#(" + expressao.c + ")#" + corpo.c) : ("#(" + expressao.v + ")#" + corpo.c); // ? É Expressao : É constante
+    codigo += "]\n";
+    return codigo;
+}
+
+string gerarBreak() {
+    return TAB "breaker_of_chains;\n";
+}
+
 string gerarCodigoIfElse(const Atributo &condicao, const Atributo &cod_if, const Atributo &cod_else) {
     if (condicao.t.nome != C_BOOL)
         erro("expressao nao booleana"); // TODO fazer uma mensagem melhor
@@ -935,6 +958,63 @@ string gerarCodigoFor(const Atributo &init, const Atributo &condicao, const Atri
              TAB "goto " + label_if + ";\n" +
              label_end + ":\n" +
              "\n";
+    return codigo;
+}
+
+string gerarCodigoSwitch(const Atributo &cond, Atributo &cod) {
+    string codigo;
+
+    string condicao_switch;
+    if( cond.c[4] == 't' ) { // É Expressao
+        codigo += cond.c;
+        size_t pos1 = cond.c.rfind("\n", cond.c.size()-2 );
+        size_t pos2 = cond.c.rfind("=", cond.c.size()-2 );
+        condicao_switch = cond.c.substr(pos1+5,pos2-pos1-6);
+    } else {                 // É constante
+        condicao_switch = cond.v;
+    }
+
+    int id_cases = 0;
+    string cond_cases[MAX_CASES];
+    while(1) {
+        size_t pos1 = cod.c.find("#(");
+        if (pos1==string::npos) break;
+        size_t pos2 = cod.c.find(")#", pos1);
+        string buffer = cod.c.substr(pos1+2, pos2-pos1-2);
+        if(buffer.find("temp")!=std::string::npos) {
+            codigo += buffer;
+            size_t pos1 = buffer.rfind("\n", buffer.size()-2 );
+            size_t pos2 = buffer.rfind("=", buffer.size()-2 );
+            cond_cases[id_cases++] = buffer.substr(pos1+5,pos2-pos1-6);
+        } else {
+            cond_cases[id_cases++] = buffer;
+        }
+        cod.c.erase(pos1,pos2-pos1+2);
+    }
+
+    string label_end = gerarLabel();
+
+    int aux_id_label = id_label;
+    for(int id=0; id < id_cases; ++id) {
+        codigo += TAB "if (" + condicao_switch + "==" + cond_cases[id] + ") goto " + gerarLabel() + ";\n";
+    }
+
+    string label_default = gerarLabel();
+    codigo += TAB "goto " + label_default + ";\n";
+    
+    for(int id=0; id < id_cases; ++id) {
+        size_t pos1 = cod.c.find("[");
+        size_t pos2 = cod.c.find("]");
+        string buffer = cod.c.substr(pos1+1,pos2-1);
+        codigo += "LABEL_" + toStr(aux_id_label+id) + ":\n";
+        codigo += buffer;
+        cod.c.erase(pos1,pos2-pos1+2);
+    }
+
+    codigo += label_default + ":\n" + cod.c;
+    codigo += label_end + ":";
+    replaceAll(codigo, "breaker_of_chains", "goto " + label_end);
+      
     return codigo;
 }
 
