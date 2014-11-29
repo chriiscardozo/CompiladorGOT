@@ -92,9 +92,9 @@ void resetVariaveisProcedimento();
 void inicializaResultadoOperador();
 Tipo tipoResultado(const Tipo &a, string op, const Tipo &b);
 void resetVarsTemp();
-string geraCodigoVarsTemp();
-string geraVarTemp(const Tipo &t);
-void geraCodigoOperadorBinario(Atributo &SS, const Atributo &S1, const Atributo &S2, const Atributo &S3);
+string gerarCodigoVarsTemp();
+string gerarVarTemp(const Tipo &t);
+void gerarCodigoOperadorBinario(Atributo &SS, const Atributo &S1, const Atributo &S2, const Atributo &S3);
 string gerarCodigoPrint(Atributo &S);
 
 string gerarLabel();
@@ -147,7 +147,7 @@ MAIN : COMECA_MAIN CORPO TK_TERMINA_MAIN
             $$ = Atributo();
             $$.c = "\n"
                    "int main() {\n" +
-                   geraCodigoVarsTemp() +
+                   gerarCodigoVarsTemp() +
                    codigoVarsProcedimento + '\n' +
                    $2.c +
                    "\n" +
@@ -172,7 +172,7 @@ FUNCAO : TIPO TK_ID '(' LISTA_ARGUMENTOS ')' BLOCO
             $$ = Atributo();
             $$.c = "\n" +
                    $1.v + " " + $2.v + "(" + $4.c + ") {\n" +
-                   geraCodigoVarsTemp() +
+                   gerarCodigoVarsTemp() +
                    codigoVarsProcedimento + '\n' +
                    $6.c +
                    "}\n";
@@ -275,38 +275,38 @@ PARAMETROS : EXPRESSAO ',' PARAMETROS
            ;
 
 EXPRESSAO : EXPRESSAO TK_ADICAO EXPRESSAO
-            { geraCodigoOperadorBinario($$, $1, $2, $3); }
+            { gerarCodigoOperadorBinario($$, $1, $2, $3); }
           | EXPRESSAO TK_SUBTRACAO EXPRESSAO
-            { geraCodigoOperadorBinario($$, $1, $2, $3); }
+            { gerarCodigoOperadorBinario($$, $1, $2, $3); }
           | EXPRESSAO TK_MULTIPLICACAO EXPRESSAO
-            { geraCodigoOperadorBinario($$, $1, $2, $3); }
+            { gerarCodigoOperadorBinario($$, $1, $2, $3); }
           | EXPRESSAO TK_DIVISAO EXPRESSAO
-            { geraCodigoOperadorBinario($$, $1, $2, $3); }
+            { gerarCodigoOperadorBinario($$, $1, $2, $3); }
           | EXPRESSAO TK_MODULO EXPRESSAO
-            { geraCodigoOperadorBinario($$, $1, $2, $3); }
+            { gerarCodigoOperadorBinario($$, $1, $2, $3); }
           | EXPRESSAO TK_COMP_MENOR EXPRESSAO
-            { geraCodigoOperadorBinario($$, $1, $2, $3); }
+            { gerarCodigoOperadorBinario($$, $1, $2, $3); }
           | EXPRESSAO TK_COMP_MAIOR EXPRESSAO
-            { geraCodigoOperadorBinario($$, $1, $2, $3); }
+            { gerarCodigoOperadorBinario($$, $1, $2, $3); }
           | EXPRESSAO TK_COMP_MENOR_IGUAL EXPRESSAO
-            { geraCodigoOperadorBinario($$, $1, $2, $3); }
+            { gerarCodigoOperadorBinario($$, $1, $2, $3); }
           | EXPRESSAO TK_COMP_MAIOR_IGUAL EXPRESSAO
-            { geraCodigoOperadorBinario($$, $1, $2, $3); }
+            { gerarCodigoOperadorBinario($$, $1, $2, $3); }
           | EXPRESSAO TK_COMP_IGUAL EXPRESSAO
-            { geraCodigoOperadorBinario($$, $1, $2, $3); }
+            { gerarCodigoOperadorBinario($$, $1, $2, $3); }
           | EXPRESSAO TK_COMP_DIFF EXPRESSAO
-            { geraCodigoOperadorBinario($$, $1, $2, $3); }
+            { gerarCodigoOperadorBinario($$, $1, $2, $3); }
           | EXPRESSAO TK_OR EXPRESSAO
-            { geraCodigoOperadorBinario($$, $1, $2, $3); }
+            { gerarCodigoOperadorBinario($$, $1, $2, $3); }
           | EXPRESSAO TK_AND EXPRESSAO
-            { geraCodigoOperadorBinario($$, $1, $2, $3); }
+            { gerarCodigoOperadorBinario($$, $1, $2, $3); }
           | TK_NOT EXPRESSAO
           | TK_ID ARRAY TK_ATRIBUICAO EXPRESSAO
             { 
               Atributo A = buscaVariavel($1.v);
               string posicaoAcesso = validarAcessoArray($1.v, $2.c); 
               A.v = A.v + posicaoAcesso;
-              geraCodigoOperadorBinario($$, A, $3, $4); } // TODO Falta atribuir para array
+              gerarCodigoOperadorBinario($$, A, $3, $4); } // TODO Falta atribuir para array
           | CHAMADA_FUNCAO
           | TERMINAL
             { $$ = $1; }
@@ -754,7 +754,7 @@ void resetVarsTemp() {
     n_var_temp.clear();
 }
 
-string geraCodigoVarsTemp() {
+string gerarCodigoVarsTemp() {
     // TODO verificar codigo depois de implementar string!
     char buf[1024];
     string cod;
@@ -769,7 +769,7 @@ string geraCodigoVarsTemp() {
     return cod;
 }
 
-string geraVarTemp(const Tipo &t) {
+string gerarVarTemp(const Tipo &t) {
     return "temp_" + t.nome + "_" + toStr(n_var_temp[t.nome]++);
 }
 
@@ -780,7 +780,7 @@ void resetVariaveisProcedimento() {
     codigoVarsProcedimento = "";
 }
 
-void geraCodigoOperadorBinario(Atributo &SS, const Atributo &S1, const Atributo &S2, const Atributo &S3) {
+void gerarCodigoOperadorBinario(Atributo &SS, const Atributo &S1, const Atributo &S2, const Atributo &S3) {
     SS.t = tipoResultado(S1.t, S2.v, S3.t);
 
     if (S2.v == "=") {
@@ -795,7 +795,7 @@ void geraCodigoOperadorBinario(Atributo &SS, const Atributo &S1, const Atributo 
         }
     }
     else {
-        SS.v = geraVarTemp(SS.t);
+        SS.v = gerarVarTemp(SS.t);
         if (SS.t.nome == C_STRING) { //TODO falta string
         }
         else {
