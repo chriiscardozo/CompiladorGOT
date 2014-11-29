@@ -4,4 +4,3 @@
 - break
 - return
 - switch-case
-- operador !

@@ -90,11 +90,14 @@ void adicionarVariaveisProcedimento(string codigo);
 void resetVariaveisProcedimento();
 
 void inicializaResultadoOperador();
-Tipo tipoResultado(const Tipo &a, string op, const Tipo &b);
+Tipo tipoResultadoBinario(const Tipo &a, string op, const Tipo &b);
+Tipo tipoResultadoUnario(string op, const Tipo &a);
 void resetVarsTemp();
 string gerarCodigoVarsTemp();
 string gerarVarTemp(const Tipo &t);
 void gerarCodigoOperadorBinario(Atributo &SS, const Atributo &S1, const Atributo &S2, const Atributo &S3);
+void gerarCodigoOperadorUnario(Atributo &SS, const Atributo &S1, const Atributo &S2);
+
 string gerarCodigoPrint(Atributo &S);
 
 string gerarLabel();
@@ -301,6 +304,7 @@ EXPRESSAO : EXPRESSAO TK_ADICAO EXPRESSAO
           | EXPRESSAO TK_AND EXPRESSAO
             { gerarCodigoOperadorBinario($$, $1, $2, $3); }
           | TK_NOT EXPRESSAO
+            { gerarCodigoOperadorUnario($$, $1, $2); }
           | TK_ID ARRAY TK_ATRIBUICAO EXPRESSAO
             { 
               Atributo A = buscaVariavel($1.v);
@@ -744,10 +748,16 @@ void replaceAll( string &s, const string &search, const string &replace ) {
     }
 }
 
-Tipo tipoResultado(const Tipo &a, string op, const Tipo &b) {
+Tipo tipoResultadoBinario(const Tipo &a, string op, const Tipo &b) {
     if (resultadoOperador.find(a.nome + op + b.nome) == resultadoOperador.end())
         erro("Operacao nao permitida: " + a.nome + op + b.nome);
     return resultadoOperador[a.nome + op + b.nome];
+}
+
+Tipo tipoResultadoUnario(string op, const Tipo &a) {
+    if (resultadoOperador.find(op + a.nome) == resultadoOperador.end())
+        erro("Operacao nao permitida: " + op + a.nome);
+    return resultadoOperador[op + a.nome];
 }
 
 void resetVarsTemp() {
@@ -781,7 +791,7 @@ void resetVariaveisProcedimento() {
 }
 
 void gerarCodigoOperadorBinario(Atributo &SS, const Atributo &S1, const Atributo &S2, const Atributo &S3) {
-    SS.t = tipoResultado(S1.t, S2.v, S3.t);
+    SS.t = tipoResultadoBinario(S1.t, S2.v, S3.t);
 
     if (S2.v == "=") {
         if (S1.t.nome == C_STRING && (S3.t.nome == C_STRING || S3.t.nome == C_CHAR)) {
@@ -803,6 +813,14 @@ void gerarCodigoOperadorBinario(Atributo &SS, const Atributo &S1, const Atributo
                    TAB + SS.v + " = " + S1.v + " " + S2.v + " " + S3.v + ";\n";
         }
     }
+}
+
+void gerarCodigoOperadorUnario(Atributo &SS, const Atributo &S1, const Atributo &S2) {
+    SS.t = tipoResultadoUnario(S1.v, S2.t);
+
+    SS.v = gerarVarTemp(SS.t);
+    SS.c = S2.c +
+           TAB + SS.v + " = " + S1.v + S2.v + ";\n";
 }
 
 string gerarCodigoPrint(Atributo &S){

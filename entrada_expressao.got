@@ -13,7 +13,7 @@ First_of_his_name()
 
     ITS_KNOWN inteiro1, inteiro2 As Stark;
     ITS_KNOWN soma, subtracao, multiplicacao, divisao As Baratheon;
-    ITS_KNOWN verdadeiro, falso, e, ou As Martell;
+    ITS_KNOWN verdadeiro, falso, e, ou, not As Martell;
 
     inteiro1 = 20;
     inteiro2 = 10;
@@ -23,6 +23,7 @@ First_of_his_name()
 
     e = verdadeiro && verdadeiro && verdadeiro && FIRE;
     ou = falso && falso && ICE;
+    not = !e && !ou;
 
     soma = inteiro1 + inteiro2;
     subtracao = inteiro1 - inteiro2;
