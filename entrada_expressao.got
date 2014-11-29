@@ -6,7 +6,12 @@ When you play the game of thrones, you win or you die
 ITS_KNOWN a, b, c, d AS Stark;
 
 Stark foo() {
-	ITS_KNOWN d As Tully;
+	ITS_KNOWN a, b, c, d AS Targaryen;
+	ITS_KNOWN e, f AS Lannister;
+	e+f;
+	a = b+c;
+	a = "asdf" + e + d;
+	b = 'd';
 }
 
 First_of_his_name()

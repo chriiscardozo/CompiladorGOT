@@ -420,9 +420,9 @@ void inicializaResultadoOperador() {
     resultadoOperador["string+string"] = Tipo("string");
     resultadoOperador["string+char"] = Tipo("string");
     resultadoOperador["char+string"] = Tipo("string");
-    resultadoOperador["char+char"] = Tipo("string");
-    resultadoOperador["char+int"] = Tipo("char");
-    resultadoOperador["int+char"] = Tipo("char");
+    resultadoOperador["char+char"] = Tipo("char");
+    resultadoOperador["char+int"] = Tipo("int");
+    resultadoOperador["int+char"] = Tipo("int");
 
 
     // -
@@ -435,8 +435,8 @@ void inicializaResultadoOperador() {
     resultadoOperador["int-float"] = Tipo("float");
     resultadoOperador["double-float"] = Tipo("double");
     resultadoOperador["float-double"] = Tipo("double");
-    resultadoOperador["char-int"] = Tipo("char");
-    resultadoOperador["int-char"] = Tipo("char");
+    resultadoOperador["char-int"] = Tipo("int");
+    resultadoOperador["int-char"] = Tipo("int");
 
     // *
     resultadoOperador["int*int"] = Tipo("int");
@@ -765,15 +765,19 @@ void resetVarsTemp() {
 }
 
 string gerarCodigoVarsTemp() {
-    // TODO verificar codigo depois de implementar string!
-    char buf[1024];
     string cod;
     for (auto it = n_var_temp.begin(); it != n_var_temp.end(); it++) {
         for (int i = 0; i < it->second; i++) {
             string tp = it->first;
-            if (tp == "bool")
-                tp = "int";
-            cod += TAB + tp + " temp_" + it->first + "_" + toStr(i) + ";\n";
+            if (tp == C_STRING) {
+                tp = C_CHAR;
+                cod += TAB + tp + " temp_" + it->first + "_" + toStr(i) + "[" + toStr(MAX_STR) + "];\n";
+            }
+            else {
+                if (tp == C_BOOL)
+                    tp = C_INT;
+                cod += TAB + tp + " temp_" + it->first + "_" + toStr(i) + ";\n";
+            }
         }
     }
     return cod;
@@ -794,21 +798,39 @@ void gerarCodigoOperadorBinario(Atributo &SS, const Atributo &S1, const Atributo
     SS.t = tipoResultadoBinario(S1.t, S2.v, S3.t);
 
     if (S2.v == "=") {
-        if (S1.t.nome == C_STRING && (S3.t.nome == C_STRING || S3.t.nome == C_CHAR)) {
-            // TODO implementar atribuição para strings
-            erro("Ver TODO implementar atribuicao para strings");
+        SS.v = S1.v;
+        if (SS.t.nome == C_STRING) {
+            if (S1.t.nome == C_STRING && S3.t.nome == C_STRING) { // string = string
+                SS.c = S1.c + S3.c +
+                       TAB + "sprintf(" + S1.v + ", \"%s\", " + S3.v + ");\n";
+            }
+            else { // string = char
+                SS.c = S1.c + S3.c +
+                       TAB + "sprintf(" + S1.v + ", \"%c\", " + S3.v + ");\n";
+            }
         }
         else {
-            SS.v = S1.v;
             SS.c = S1.c + S3.c + 
                    TAB + S1.v + " = " + S3.v + ";\n";
         }
     }
     else {
         SS.v = gerarVarTemp(SS.t);
-        if (SS.t.nome == C_STRING) { //TODO falta string
+        if (SS.t.nome == C_STRING) { // se o resultado e' C_STRING, entao a operacao e' de concatenacao
+            if (S1.t.nome == C_STRING && S3.t.nome == C_STRING) { // string + string
+                SS.c = S1.c + S3.c +
+                       TAB + "sprintf(" + SS.v + ", \"%s%s\", " + S1.v + ", " + S3.v + ");\n";
+            }
+            else if (S1.t.nome == C_STRING && S3.t.nome == C_CHAR) { // string + char
+                SS.c = S1.c + S3.c +
+                       TAB + "sprintf(" + SS.v + ", \"%s%c\", " + S1.v + ", " + S3.v + ");\n";
+            }
+            else { // char + string
+                SS.c = S1.c + S3.c +
+                       TAB + "sprintf(" + SS.v + ", \"%c%s\", " + S1.v + ", " + S3.v + ");\n";
+            }
         }
-        else {
+        else { // TODO tratar comparacao de strings
             SS.c = S1.c + S3.c +
                    TAB + SS.v + " = " + S1.v + " " + S2.v + " " + S3.v + ";\n";
         }
