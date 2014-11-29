@@ -1,0 +1,7 @@
+- argumentos de funcoes
+- chamada de funcoes com parametros
+- passagem por referencia (deixar para o final!)
+- break
+- return
+- switch-case
+- operador !
