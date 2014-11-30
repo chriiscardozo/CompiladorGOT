@@ -103,26 +103,26 @@ BIB_INCLUDE         (("<")({LETRA})*(".h")?(">")|(\")({LETRA})*(".h")?(\"))
 
 {ATRIBUICAO}        { yylval = Atributo(yytext); return TK_ATRIBUICAO; }
 
-{PRINCIPAL_FUNCAO}  { return TK_MAIN; }
-{COMECA_BLOCO}      { return TK_COMECA_BLOCO; }
-{TERMINA_BLOCO}     { return TK_TERMINA_BLOCO; }
-{TERMINA_MAIN}      { return TK_TERMINA_MAIN; }
-{COMECA_FUNCAO}     { return TK_COMECA_FUNCAO; }
-{TERMINA_FUNCAO}    { return TK_TERMINA_FUNCAO; }
+{PRINCIPAL_FUNCAO}  { yylval = Atributo(yytext); return TK_MAIN; }
+{COMECA_BLOCO}      { yylval = Atributo(yytext); return TK_COMECA_BLOCO; }
+{TERMINA_BLOCO}     { yylval = Atributo(yytext); return TK_TERMINA_BLOCO; }
+{TERMINA_MAIN}      { yylval = Atributo(yytext); return TK_TERMINA_MAIN; }
+{COMECA_FUNCAO}     { yylval = Atributo(yytext); return TK_COMECA_FUNCAO; }
+{TERMINA_FUNCAO}    { yylval = Atributo(yytext); return TK_TERMINA_FUNCAO; }
 
-{IF}                { return TK_IF; }
-{ELSE}              { return TK_ELSE; }
-{FOR}               { return TK_FOR; }
-{DO}                { return TK_DO; }
-{WHILE}             { return TK_WHILE; }
-{SWITCH}            { return TK_SWITCH; }
-{CASE}              { return TK_CASE; }
-{DEFAULT}           { return TK_DEFAULT; }
+{IF}                { yylval = Atributo(yytext); return TK_IF; }
+{ELSE}              { yylval = Atributo(yytext); return TK_ELSE; }
+{FOR}               { yylval = Atributo(yytext); return TK_FOR; }
+{DO}                { yylval = Atributo(yytext); return TK_DO; }
+{WHILE}             { yylval = Atributo(yytext); return TK_WHILE; }
+{SWITCH}            { yylval = Atributo(yytext); return TK_SWITCH; }
+{CASE}              { yylval = Atributo(yytext); return TK_CASE; }
+{DEFAULT}           { yylval = Atributo(yytext); return TK_DEFAULT; }
 
-{RETURN}            { return TK_RETURN; }
+{RETURN}            { yylval = Atributo(yytext); return TK_RETURN; }
 
-{SCAN}              { return TK_SCAN; }
-{PRINT}             { return TK_PRINT; }
+{SCAN}              { yylval = Atributo(yytext); return TK_SCAN; }
+{PRINT}             { yylval = Atributo(yytext); return TK_PRINT; }
 
 
 {OR}                { yylval = Atributo(yytext); return TK_OR; }
@@ -142,15 +142,16 @@ BIB_INCLUDE         (("<")({LETRA})*(".h")?(">")|(\")({LETRA})*(".h")?(\"))
 {DIVISAO}           { yylval = Atributo(yytext); return TK_DIVISAO; }
 {MODULO}            { yylval = Atributo(yytext); return TK_MODULO; }
 
-{PROTOTIPO}         { return TK_PROTOTIPO; }
+{PROTOTIPO}         { yylval = Atributo(yytext); return TK_PROTOTIPO; }
 
-{NULL}              { return TK_NULL; }
-{BREAK}             { return TK_BREAK; }
-{DECLARAR_VAR}      { return TK_DECLARAR_VAR; }
-{AS}                { return TK_AS; }
+{NULL}              { yylval = Atributo(yytext); return TK_NULL; }
+{BREAK}             { yylval = Atributo(yytext); return TK_BREAK; }
+{DECLARAR_VAR}      { yylval = Atributo(yytext); return TK_DECLARAR_VAR; }
+{AS}                { yylval = Atributo(yytext); return TK_AS; }
 
-{INICIO}            { return TK_INICIO; }
-{INCLUDE}           { return TK_INCLUDE; }
+{INICIO}            { yylval = Atributo(yytext); return TK_INICIO; }
+
+{INCLUDE}           { yylval = Atributo(yytext); return TK_INCLUDE; }
 {BIB_INCLUDE}       { yylval = Atributo(yytext); return TK_BIB_INCLUDE; }
 
 {ID}                { yylval = Atributo(yytext); return TK_ID;}
