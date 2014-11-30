@@ -121,7 +121,7 @@ void adicionarNovaTabelaVariaveis();
 void adicionarVariaveisProcedimento(string codigo);
 void resetVariaveisProcedimento();
 
-vector<Argumento> converteParaVectorArgumentos(vector<string> params_split);
+vector<Argumento> converteParaVectorArgumentos(const vector<string> &params_split);
 void inicializaResultadoOperador();
 Tipo tipoResultadoBinario(const Tipo &a, string op, const Tipo &b);
 Tipo tipoResultadoUnario(string op, const Tipo &a);
@@ -134,9 +134,9 @@ bool funcaoDeclarada(string nome);
 string gerarCodigoPrototipo(string tipo, string nome, string listaParams);
 void adicionarFuncaoImplementada(string tipo, string nome, string listaParams);
 
-string gerarCodigoReturn(Atributo S2);
+string gerarCodigoReturn(const Atributo &S2);
 
-string gerarCodigoPrint(Atributo &S);
+string gerarCodigoPrint(const Atributo &S);
 
 string verificarTiposChamadaFuncao(string nome, string parametros);
 
@@ -864,9 +864,9 @@ void adicionarNovaTabelaVariaveis(){
     TSV tabela;
     id_bloco++;
 
-    for(auto it = tabelaVariaveisArgumentos.begin(); it != tabelaVariaveisArgumentos.end(); ++it){
-      it->second.bloco = id_bloco;
-      tabela[it->first] = it->second;
+    for (auto &arg : tabelaVariaveisArgumentos) {
+        arg.second.bloco = id_bloco;
+        tabela[arg.first] = arg.second;
     }
 
     tabelaVariaveisArgumentos.clear();
@@ -916,17 +916,17 @@ void resetVarsTemp() {
 
 string gerarCodigoVarsTemp() {
     string cod;
-    for (auto it = n_var_temp.begin(); it != n_var_temp.end(); it++) {
-        for (int i = 0; i < it->second; i++) {
-            string tp = it->first;
+    for (const auto &tipo : n_var_temp) {
+        for (int i = 0; i < tipo.second; i++) {
+            string tp = tipo.first;
             if (tp == C_STRING) {
                 tp = C_CHAR;
-                cod += TAB + tp + " temp_" + it->first + "_" + toStr(i) + "[" + toStr(MAX_STR) + "];\n";
+                cod += TAB + tp + " temp_" + tipo.first + "_" + toStr(i) + "[" + toStr(MAX_STR) + "];\n";
             }
             else {
                 if (tp == C_BOOL)
                     tp = C_INT;
-                cod += TAB + tp + " temp_" + it->first + "_" + toStr(i) + ";\n";
+                cod += TAB + tp + " temp_" + tipo.first + "_" + toStr(i) + ";\n";
             }
         }
     }
@@ -1008,7 +1008,7 @@ void gerarCodigoOperadorUnario(Atributo &SS, const Atributo &S1, const Atributo 
            TAB + SS.v + " = " + S1.v + S2.v + ";\n";
 }
 
-string gerarCodigoPrint(Atributo &S){
+string gerarCodigoPrint(const Atributo &S){
   string codigo = string(TAB) + "printf";
   string endereco = "";
   
@@ -1166,11 +1166,9 @@ string gerarCodigoPrototipo(string tipo, string nome, string listaParams){
 }
 
 void verificarPrototiposDeclarados(){
-  for(const auto& kv : tabelaFuncoes){
-    if(kv.second.prototipo){
-      erro("A função " + tabelaFuncoes[kv.first].nome + "(" + tabelaFuncoes[kv.first].codigo_params + ") tem protótipo declarado mas não foi implementada.");
-    }
-  }
+  for(const auto& kv : tabelaFuncoes)
+    if(kv.second.prototipo)
+      erro("A função " + kv.second.nome + "(" + kv.second.codigo_params + ") tem protótipo declarado mas não foi implementada.");
 }
 
 void adicionarFuncaoImplementada(string tipo, string nome, string listaParams){
@@ -1194,7 +1192,7 @@ void adicionarFuncaoImplementada(string tipo, string nome, string listaParams){
   }
 }
 
-vector<Argumento> converteParaVectorArgumentos(vector<string> params_split){
+vector<Argumento> converteParaVectorArgumentos(const vector<string> &params_split){
   vector<Argumento> params;
 
   for(int i = 0; i < params_split.size(); i++){
@@ -1206,7 +1204,7 @@ vector<Argumento> converteParaVectorArgumentos(vector<string> params_split){
   return params;
 }
 
-string gerarCodigoReturn(Atributo S2){
+string gerarCodigoReturn(const Atributo &S2){
     if (S2.t.nome != tipo_retorno_atual)
         erro("Tipo de retorno deve ser igual ao retorno da função.");
     return S2.c + TAB + "return " + S2.v + ";\n";
