@@ -1,5 +1,6 @@
 - comparação de string
-- passagem por referencia (deixar para o final!)
+- função com tipo de retorno string
+- passagem por referencia (deixar para o final!) A.K.A não fazer :p
 - switch-case
 - break
 - pipes! (5 pontos)
