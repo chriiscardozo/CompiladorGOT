@@ -946,26 +946,22 @@ void resetVariaveisProcedimento() {
 
 void gerarCodigoOperadorBinario(Atributo &SS, const Atributo &S1, const Atributo &S2, const Atributo &S3) {
     SS.t = tipoResultadoBinario(S1.t, S2.v, S3.t);
+    SS.c = S1.c + S3.c;
 
     if (S2.v == "=") {
         SS.v = S1.v;
         string endereco = "";
 
-        if(S1.t.ndim > 0) endereco = "&";
+        if (S1.t.ndim > 0) endereco = "&";
 
         if (SS.t.nome == C_STRING) {
-            if (S1.t.nome == C_STRING && S3.t.nome == C_STRING) { // string = string
-                SS.c = S1.c + S3.c +
-                       TAB + "sprintf(" + endereco + S1.v + ", \"%s\", " + S3.v + ");\n";
-            }
-            else { // string = char
-                SS.c = S1.c + S3.c +
-                       TAB + "sprintf(" + endereco + S1.v + ", \"%c\", " + S3.v + ");\n";
-            }
+            if (S1.t.nome == C_STRING && S3.t.nome == C_STRING)
+                SS.c += TAB "sprintf(" + endereco + S1.v + ", \"%s\", " + S3.v + ");\n";
+            else
+                SS.c += TAB "sprintf(" + endereco + S1.v + ", \"%c\", " + S3.v + ");\n";
         }
         else {
-            SS.c = S1.c + S3.c + 
-                   TAB + S1.v + " = " + S3.v + ";\n";
+            SS.c += TAB + S1.v + " = " + S3.v + ";\n";
         }
     }
     else {
@@ -975,27 +971,23 @@ void gerarCodigoOperadorBinario(Atributo &SS, const Atributo &S1, const Atributo
             string endereco1 = "", endereco2 = "";
 
             // Tratando caso de vetor de strings
-            if(S1.t.ndim > 0 && S1.t.nome == C_STRING)
-              endereco1 = "&";
-            if(S3.t.ndim > 0 && S3.t.nome == C_STRING)
-              endereco2 = "&";
+            if (S1.t.ndim > 0 && S1.t.nome == C_STRING)
+                endereco1 = "&";
+            if (S3.t.ndim > 0 && S3.t.nome == C_STRING)
+                endereco2 = "&";
 
-            if (S1.t.nome == C_STRING && S3.t.nome == C_STRING) { // string + string
-                SS.c = S1.c + S3.c +
-                       TAB + "sprintf(" + SS.v + ", \"%s%s\", " + endereco1 + S1.v + ", " + endereco2 +  S3.v + ");\n";
-            }
-            else if (S1.t.nome == C_STRING && S3.t.nome == C_CHAR) { // string + char
-                SS.c = S1.c + S3.c +
-                       TAB + "sprintf(" + SS.v + ", \"%s%c\", " +  endereco1 + S1.v + ", " + S3.v + ");\n";
-            }
-            else { // char + string
-                SS.c = S1.c + S3.c +
-                       TAB + "sprintf(" + SS.v + ", \"%c%s\", " + S1.v + ", " +  endereco2 + S3.v + ");\n";
-            }
+            if (S1.t.nome == C_STRING && S3.t.nome == C_STRING)
+                SS.c += TAB "sprintf(" + SS.v + ", \"%s%s\", " + endereco1 + S1.v + ", " + endereco2 +  S3.v + ");\n";
+            else if (S1.t.nome == C_STRING && S3.t.nome == C_CHAR)
+                SS.c += TAB "sprintf(" + SS.v + ", \"%s%c\", " +  endereco1 + S1.v + ", " + S3.v + ");\n";
+            else
+                SS.c += TAB "sprintf(" + SS.v + ", \"%c%s\", " + S1.v + ", " +  endereco2 + S3.v + ");\n";
         }
-        else { // TODO tratar comparacao de strings
-            SS.c = S1.c + S3.c +
-                   TAB + SS.v + " = " + S1.v + " " + S2.v + " " + S3.v + ";\n";
+        else if (SS.t.nome == C_BOOL && S1.t.nome == C_STRING) { // comparacao de strings
+            SS.c += TAB + SS.v + " = strcmp(" + S1.v + ", " + S3.v + ") " + S2.v + " 0;\n";
+        }
+        else {
+            SS.c += TAB + SS.v + " = " + S1.v + " " + S2.v + " " + S3.v + ";\n";
         }
     }
 }
@@ -1047,8 +1039,7 @@ string gerarCodigoIfElse(const Atributo &condicao, const Atributo &cod_if, const
              TAB "goto " + label_end + ";\n" +
              label_if + ":\n" +
              cod_if.c +
-             label_end + ":\n" +
-             "\n";
+             label_end + ":\n";
     return codigo;
 }
 
@@ -1066,8 +1057,7 @@ string gerarCodigoWhile(const Atributo &condicao, const Atributo &cod) {
              label_cod + ":\n" +
              cod.c +
              TAB "goto " + label_if + ";\n" +
-             label_end + ":\n" +
-             "\n";
+             label_end + ":\n";
     return codigo;
 }
 
@@ -1079,8 +1069,7 @@ string gerarCodigoDoWhile(const Atributo &condicao, const Atributo &cod) {
     codigo = label_cod + ":\n" +
              cod.c +
              condicao.c +
-             TAB "if (" + condicao.v + ") goto " + label_cod + ";\n" +
-             "\n";
+             TAB "if (" + condicao.v + ") goto " + label_cod + ";\n";
     return codigo;
 }
 
@@ -1100,8 +1089,7 @@ string gerarCodigoFor(const Atributo &init, const Atributo &condicao, const Atri
              cod.c +
              upd.c +
              TAB "goto " + label_if + ";\n" +
-             label_end + ":\n" +
-             "\n";
+             label_end + ":\n";
     return codigo;
 }
 

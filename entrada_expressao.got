@@ -12,6 +12,7 @@ Stark foo() {
 	a = b+c;
 	a = "asdf" + e + d;
 	b = 'd';
+	a+b == "123" + c+d;
 }
 
 First_of_his_name()
