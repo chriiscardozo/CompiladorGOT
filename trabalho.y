@@ -44,23 +44,23 @@ struct SimboloVariavel{
         : nome(nome), t(tipo), bloco(bloco) {}
 };
 
-struct Parametro {
+struct Argumento {
   string nome;
   Tipo tipo;
 
-  Parametro(){}
-  Parametro(string nome, Tipo tipo) : nome(nome), tipo(tipo) {}
+  Argumento(){}
+  Argumento(string nome, Tipo tipo) : nome(nome), tipo(tipo) {}
 };
 
 struct SimboloFuncao {
   string nome;
   Tipo retorno;
   bool prototipo; // TRUE => Apenas prototipo ; FALSE => Já com corpo declarado
-  vector<Parametro> params;
+  vector<Argumento> params;
   string codigo_params;
 
   SimboloFuncao() {}
-  SimboloFuncao(string nome, Tipo retorno, vector<Parametro> params, string codigo_params, bool prototipo = false)
+  SimboloFuncao(string nome, Tipo retorno, vector<Argumento> params, string codigo_params, bool prototipo = false)
     : nome(nome), retorno(retorno), params(params), codigo_params(codigo_params), prototipo(prototipo) {}
 };
 
@@ -116,7 +116,7 @@ void adicionarNovaTabelaVariaveis();
 void adicionarVariaveisProcedimento(string codigo);
 void resetVariaveisProcedimento();
 
-vector<Parametro> converteParaVectorParametros(vector<string> params_split);
+vector<Argumento> converteParaVectorArgumentos(vector<string> params_split);
 void inicializaResultadoOperador();
 Tipo tipoResultadoBinario(const Tipo &a, string op, const Tipo &b);
 Tipo tipoResultadoUnario(string op, const Tipo &a);
@@ -351,15 +351,15 @@ COMANDO : EXPRESSAO ';' { $$.c = $1.c; }
         ;
 
 
-CHAMADA_FUNCAO : TK_ID '(' LISTA_PARAMETROS ')'
+CHAMADA_FUNCAO : TK_ID '(' LISTA_PARAMETROS ')' { $$ = Atributo(); /*gerarCodigoChamadaFuncao($$, $1, $3);*/ }
                ;
 
-LISTA_PARAMETROS : PARAMETROS
+LISTA_PARAMETROS : PARAMETROS { $$ = Atributo(); $$.c = $1.c; $$.v = $1.v; }
                  | { $$ = Atributo(); }
                  ;
 
-PARAMETROS : EXPRESSAO ',' PARAMETROS
-           | EXPRESSAO
+PARAMETROS : EXPRESSAO ',' PARAMETROS { $$ = Atributo(); $$.v = $1.v + "," + $3.v; $$.c = $1.c + $3.c; }
+           | EXPRESSAO { $$ = Atributo($1.v, $1.t, $1.c); }
            ;
 
 EXPRESSAO : EXPRESSAO TK_ADICAO EXPRESSAO
@@ -761,7 +761,7 @@ vector<string> traduzDimensoesArray(string aux) {
 string validarAcessoArray(string var, string dims) {
     string codigo = "";
     vector<string> dimsAcesso = traduzDimensoesArray(dims);
-
+    int posicao;
     Atributo variavel = buscaVariavel(var);
 
     if (dimsAcesso.size() > 0) {
@@ -777,21 +777,25 @@ string validarAcessoArray(string var, string dims) {
                     "(de 0 a " + toStr(variavel.t.t_dim[i-1]-1) + ") na dimensao " + toStr(i-1));
         }
 
-        if (variavel.t.ndim == 1) {
-            codigo = "[" + dimsAcesso[1] + "]";
-        }
-        else {
-            int posicao;
+        if (variavel.t.ndim == 1) 
+            posicao = atoi(dimsAcesso[1].c_str());
+        else
             posicao = variavel.t.t_dim[1]*atoi(dimsAcesso[1].c_str()) + atoi(dimsAcesso[2].c_str());
-            codigo = "[" + toStr(posicao) + "]";
+
+        // TODO verificar caso de array de strings
+        if(variavel.t.nome == C_STRING){
+          codigo = "[" + toStr(posicao*256) + "]";
         }
+        else{
+          codigo = "[" + toStr(posicao) + "]";
+        }
+
     }
     else {
         if (variavel.t.ndim > 0)
             erro("Falta especificar indice do array: " + var);
     }
 
-    // TODO verificar caso de array de strings
     return codigo;
 }
 
@@ -908,14 +912,18 @@ void gerarCodigoOperadorBinario(Atributo &SS, const Atributo &S1, const Atributo
 
     if (S2.v == "=") {
         SS.v = S1.v;
+        string endereco = "";
+
+        if(S1.t.ndim > 0) endereco = "&";
+
         if (SS.t.nome == C_STRING) {
             if (S1.t.nome == C_STRING && S3.t.nome == C_STRING) { // string = string
                 SS.c = S1.c + S3.c +
-                       TAB + "sprintf(" + S1.v + ", \"%s\", " + S3.v + ");\n";
+                       TAB + "sprintf(" + endereco + S1.v + ", \"%s\", " + S3.v + ");\n";
             }
             else { // string = char
                 SS.c = S1.c + S3.c +
-                       TAB + "sprintf(" + S1.v + ", \"%c\", " + S3.v + ");\n";
+                       TAB + "sprintf(" + endereco + S1.v + ", \"%c\", " + S3.v + ");\n";
             }
         }
         else {
@@ -925,18 +933,27 @@ void gerarCodigoOperadorBinario(Atributo &SS, const Atributo &S1, const Atributo
     }
     else {
         SS.v = gerarVarTemp(SS.t);
+
         if (SS.t.nome == C_STRING) { // se o resultado e' C_STRING, entao a operacao e' de concatenacao
+            string endereco1 = "", endereco2 = "";
+
+            // Tratando caso de vetor de strings
+            if(S1.t.ndim > 0 && S1.t.nome == C_STRING)
+              endereco1 = "&";
+            if(S3.t.ndim > 0 && S3.t.nome == C_STRING)
+              endereco2 = "&";
+
             if (S1.t.nome == C_STRING && S3.t.nome == C_STRING) { // string + string
                 SS.c = S1.c + S3.c +
-                       TAB + "sprintf(" + SS.v + ", \"%s%s\", " + S1.v + ", " + S3.v + ");\n";
+                       TAB + "sprintf(" + SS.v + ", \"%s%s\", " + endereco1 + S1.v + ", " + endereco2 +  S3.v + ");\n";
             }
             else if (S1.t.nome == C_STRING && S3.t.nome == C_CHAR) { // string + char
                 SS.c = S1.c + S3.c +
-                       TAB + "sprintf(" + SS.v + ", \"%s%c\", " + S1.v + ", " + S3.v + ");\n";
+                       TAB + "sprintf(" + SS.v + ", \"%s%c\", " +  endereco1 + S1.v + ", " + S3.v + ");\n";
             }
             else { // char + string
                 SS.c = S1.c + S3.c +
-                       TAB + "sprintf(" + SS.v + ", \"%c%s\", " + S1.v + ", " + S3.v + ");\n";
+                       TAB + "sprintf(" + SS.v + ", \"%c%s\", " + S1.v + ", " +  endereco2 + S3.v + ");\n";
             }
         }
         else { // TODO tratar comparacao de strings
@@ -956,6 +973,10 @@ void gerarCodigoOperadorUnario(Atributo &SS, const Atributo &S1, const Atributo 
 
 string gerarCodigoPrint(Atributo &S){
   string codigo = string(TAB) + "printf";
+  string endereco = "";
+  
+  if(S.t.ndim > 0)
+    endereco = "&";
 
   if(S.t.nome == C_INT)
     codigo += "(\"%d\", " + S.v + ");\n";
@@ -966,7 +987,7 @@ string gerarCodigoPrint(Atributo &S){
   else if(S.t.nome == C_DOUBLE)
     codigo += "(\"%lf\", " + S.v + ");\n";
   else if(S.t.nome == C_STRING)
-    codigo += "(\"%s\", " + S.v + ");\n";
+    codigo += "(\"%s\", " + endereco + S.v + ");\n";
   else if(S.t.nome == C_BOOL)
     codigo += "(\"%d\", " + S.v + ");\n";
 
@@ -1124,7 +1145,7 @@ bool funcaoDeclarada(string nome){
 string gerarCodigoPrototipo(string tipo, string nome, string listaParams){
   string codigo = "";
   vector<string> params_split = split(listaParams, ',');
-  vector<Parametro> params;
+  vector<Argumento> params;
 
   if(funcaoDeclarada(nome))
     erro("A função " + nome + " já foi declarada.");
@@ -1135,7 +1156,7 @@ string gerarCodigoPrototipo(string tipo, string nome, string listaParams){
 
   codigo = tipo_verificado + " " + nome + "(" + listaParams + ");";
 
-  params = converteParaVectorParametros(params_split);
+  params = converteParaVectorArgumentos(params_split);
 
   SimboloFuncao prot = SimboloFuncao(nome, Tipo(tipo), params, listaParams, true); // TODO implementar params
   tabelaFuncoes[nome] = prot;
@@ -1166,17 +1187,17 @@ void adicionarFuncaoImplementada(string tipo, string nome, string listaParams){
   else{
     vector<string> params_split = split(listaParams, ',');
 
-    SimboloFuncao f = SimboloFuncao(nome, Tipo(tipo), converteParaVectorParametros(params_split) ,listaParams);
+    SimboloFuncao f = SimboloFuncao(nome, Tipo(tipo), converteParaVectorArgumentos(params_split) ,listaParams);
     tabelaFuncoes[nome] = f;
   }
 }
 
-vector<Parametro> converteParaVectorParametros(vector<string> params_split){
-  vector<Parametro> params;
+vector<Argumento> converteParaVectorArgumentos(vector<string> params_split){
+  vector<Argumento> params;
 
   for(int i = 0; i < params_split.size(); i++){
     vector<string> definicao_t_var = split(params_split[i], ' ');
-    Parametro p = Parametro(definicao_t_var[0], Tipo(definicao_t_var[1]));
+    Argumento p = Argumento(definicao_t_var[0], Tipo(definicao_t_var[1]));
     params.push_back(p);
   }
 
