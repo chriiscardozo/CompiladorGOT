@@ -96,6 +96,7 @@ TSF tabelaFuncoes;
 
 typedef map<string, SimboloVariavel> TSV;
 vector<TSV> tabelaVariaveis;
+TSV tabelaVariaveisArgumentos;
 
 vector<string> split(string s, char delim);
 string toStr(int n);
@@ -114,6 +115,7 @@ void adicionarNovaTabelaVariaveis();
 void adicionarVariaveisProcedimento(string codigo);
 void resetVariaveisProcedimento();
 
+vector<Parametro> converteParaVectorParametros(vector<string> params_split);
 void inicializaResultadoOperador();
 Tipo tipoResultadoBinario(const Tipo &a, string op, const Tipo &b);
 Tipo tipoResultadoUnario(string op, const Tipo &a);
@@ -208,9 +210,13 @@ FUNCAO : TIPO TK_ID '(' LISTA_ARGUMENTOS ')' BLOCO
         {
             adicionarFuncaoImplementada($1.v, $2.v, $4.c);
 
+            string t = $1.v;
+            if($1.v == C_BOOL)
+              t = C_INT;
+
             $$ = Atributo();
             $$.c = "\n" +
-                   $1.v + " " + $2.v + "(" + $4.c + ") {\n" +
+                   t + " " + $2.v + "(" + $4.c + ") {\n" +
                    gerarCodigoVarsTemp() +
                    codigoVarsProcedimento + '\n' +
                    $6.c +
@@ -227,8 +233,9 @@ INCLUDES : TK_INCLUDE TK_BIB_INCLUDE INCLUDES { $$ = Atributo(); $$.c = gerarInc
 PROT : TK_PROTOTIPO TIPO TK_ID '(' LISTA_ARGUMENTOS ')' ';' PROT {
          $$ = Atributo();
          $$.c = gerarCodigoPrototipo($2.v, $3.v, $5.c) + "\n" + $8.c;
+         tabelaVariaveisArgumentos.clear();
        }
-     | { $$ = Atributo(); }
+     | { $$ = Atributo(); tabelaVariaveisArgumentos.clear(); }
      ;
 
 TIPO : TK_INT     { $$ = Atributo(C_INT);     }
@@ -244,8 +251,36 @@ LISTA_ARGUMENTOS : ARGUMENTOS { $$ = Atributo(); $$.c = $1.c; }
                  | { $$ = Atributo(); }
                  ;
 
-ARGUMENTOS : TIPO TK_ID ARRAY ',' ARGUMENTOS { $$ = Atributo(); $$.c = $1.v + " " + $2.v + $3.c + ", " + $5.c; }
-           | TIPO TK_ID ARRAY { $$ = Atributo(); $$.c = $1.v + " " + $2.v + $3.c; }
+ARGUMENTOS : TIPO TK_ID ARRAY ',' ARGUMENTOS {
+              $$ = Atributo();
+
+              string t = $1.v;
+              if($1.v == C_BOOL)
+                t = C_INT;
+
+              $$.c = t + " " + $2.v + $3.c + ", " + $5.c;
+
+              if(tabelaVariaveisArgumentos.count($2.v) > 0)
+                erro("Argumento com mesmo nome já foi declarado.");
+              else
+                tabelaVariaveisArgumentos[$2.v] = SimboloVariavel($2.v, $1.v, -1);
+
+             }
+           | TIPO TK_ID ARRAY {
+              $$ = Atributo();
+
+              string t = $1.v;
+              if($1.v == C_BOOL)
+                t = C_INT;
+
+              $$.c = t + " " + $2.v + $3.c; 
+
+              if(tabelaVariaveisArgumentos.count($2.v) > 0)
+                erro("Argumento com mesmo nome já foi declarado.");
+              else
+                tabelaVariaveisArgumentos[$2.v] = SimboloVariavel($2.v, $1.v, -1);
+
+             }
            ;
 
 VARS_GLOBAIS : TABELA_VARS VAR_GLOBAL VARS_GLOBAIS { $$ = Atributo();  $$.c = $1.c + $2.c; }
@@ -768,8 +803,15 @@ void removerBlocoVars() {
 
 void adicionarNovaTabelaVariaveis(){
     TSV tabela;
-    tabelaVariaveis.push_back(tabela);
     id_bloco++;
+
+    for(auto it = tabelaVariaveisArgumentos.begin(); it != tabelaVariaveisArgumentos.end(); ++it){
+      it->second.bloco = id_bloco;
+      tabela[it->first] = it->second;
+    }
+
+    tabelaVariaveisArgumentos.clear();
+    tabelaVariaveis.push_back(tabela);
 }
 
 vector<string> split(string s, char delim){
@@ -1064,13 +1106,13 @@ string gerarCodigoPrototipo(string tipo, string nome, string listaParams){
   if(funcaoDeclarada(nome))
     erro("A função " + nome + " já foi declarada.");
   
-  codigo = tipo + " " + nome + "(" + listaParams + ");";
+  string tipo_verificado = tipo;
+  if(tipo == C_BOOL)
+    tipo_verificado = C_INT;
 
-  for(int i = 0; i < params_split.size(); i++){
-    vector<string> definicao_t_var = split(params_split[i], ' ');
-    Parametro p = Parametro(definicao_t_var[0], Tipo(definicao_t_var[1]));
-    params.push_back(p);
-  }
+  codigo = tipo_verificado + " " + nome + "(" + listaParams + ");";
+
+  params = converteParaVectorParametros(params_split);
 
   SimboloFuncao prot = SimboloFuncao(nome, Tipo(tipo), params, listaParams, true); // TODO implementar params
   tabelaFuncoes[nome] = prot;
@@ -1098,6 +1140,24 @@ void adicionarFuncaoImplementada(string tipo, string nome, string listaParams){
     else
       erro("A função " + f.nome + " já foi declarada.");
   }
+  else{
+    vector<string> params_split = split(listaParams, ',');
+
+    SimboloFuncao f = SimboloFuncao(nome, Tipo(tipo), converteParaVectorParametros(params_split) ,listaParams);
+    tabelaFuncoes[nome] = f;
+  }
+}
+
+vector<Parametro> converteParaVectorParametros(vector<string> params_split){
+  vector<Parametro> params;
+
+  for(int i = 0; i < params_split.size(); i++){
+    vector<string> definicao_t_var = split(params_split[i], ' ');
+    Parametro p = Parametro(definicao_t_var[0], Tipo(definicao_t_var[1]));
+    params.push_back(p);
+  }
+
+  return params;
 }
 
 int main (int argc, char *argv[]){
