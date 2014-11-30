@@ -142,7 +142,6 @@ string gerarCodigoPrint(const Atributo &S);
 string verificarTiposChamadaFuncao(string nome, string parametros);
 
 string gerarLabel();
-string gerarBreak();
 string gerarCodigoIfElse(const Atributo &condicao, const Atributo &cod_if, const Atributo &cod_else);
 string gerarCodigoWhile(const Atributo &condicao, const Atributo &cod);
 string gerarCodigoDoWhile(const Atributo &condicao, const Atributo &cod);
@@ -501,7 +500,7 @@ DEFAULT : TK_DEFAULT ':' CORPO
           { listaSCases.push_back(make_pair(Atributo(), $3.c)); }
         ;
 
-COMANDO_BREAK : TK_BREAK { $$.c = gerarBreak(); }
+COMANDO_BREAK : TK_BREAK { $$.c = TAB C_TK_BREAK ";\n"; }
               ;
 
 COMANDO_RETURN : TK_RETURN EXPRESSAO { $$ = Atributo(); $$.c = gerarCodigoReturn($2); }
@@ -1087,6 +1086,7 @@ string gerarCodigoWhile(const Atributo &condicao, const Atributo &cod) {
              cod.c +
              TAB "goto " + label_if + ";\n" +
              label_end + ":\n";
+    replaceAll(codigo, C_TK_BREAK, "goto " + label_end);
     return codigo;
 }
 
@@ -1095,10 +1095,13 @@ string gerarCodigoDoWhile(const Atributo &condicao, const Atributo &cod) {
         erro("Expressão não booleana."); // TODO fazer uma mensagem melhor
     string codigo;
     string label_cod = gerarLabel();
+    string label_end = gerarLabel();
     codigo = label_cod + ":\n" +
              cod.c +
              condicao.c +
-             TAB "if (" + condicao.v + ") goto " + label_cod + ";\n";
+             TAB "if (" + condicao.v + ") goto " + label_cod + ";\n" +
+             label_end + ":\n";
+    replaceAll(codigo, C_TK_BREAK, "goto " + label_end);
     return codigo;
 }
 
@@ -1119,6 +1122,7 @@ string gerarCodigoFor(const Atributo &init, const Atributo &condicao, const Atri
              upd.c +
              TAB "goto " + label_if + ";\n" +
              label_end + ":\n";
+    replaceAll(codigo, C_TK_BREAK, "goto " + label_end);
     return codigo;
 }
 
@@ -1151,10 +1155,6 @@ string gerarCodigoSwitch(const Atributo &expr, const Atributo &cod) {
 
     listaSCases.clear();
     return condicoes + blocos;
-}
-
-string gerarBreak() {
-    return TAB "breaker_of_chains;\n";
 }
 
 bool funcaoDeclarada(string nome){
