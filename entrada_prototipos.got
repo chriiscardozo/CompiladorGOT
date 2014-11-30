@@ -6,3 +6,11 @@ squire martell foo();
 First_of_his_name()
 	
 and_now_his_watch_is_ended
+
+stark bar(stark robb, stark arya){
+
+}
+
+martell foo(){
+
+}

@@ -57,10 +57,11 @@ struct SimboloFuncao {
   Tipo retorno;
   bool prototipo; // TRUE => Apenas prototipo ; FALSE => Já com corpo declarado
   vector<Parametro> params;
+  string codigo_params;
 
   SimboloFuncao() {}
-  SimboloFuncao(string nome, Tipo retorno, vector<Parametro> params, bool prototipo = false)
-    : nome(nome), retorno(retorno), params(params), prototipo(prototipo) {}
+  SimboloFuncao(string nome, Tipo retorno, vector<Parametro> params, string codigo_params, bool prototipo = false)
+    : nome(nome), retorno(retorno), params(params), codigo_params(codigo_params), prototipo(prototipo) {}
 };
 
 #define YYSTYPE     Atributo
@@ -121,8 +122,9 @@ string gerarCodigoVarsTemp();
 string gerarVarTemp(const Tipo &t);
 void gerarCodigoOperadorBinario(Atributo &SS, const Atributo &S1, const Atributo &S2, const Atributo &S3);
 void gerarCodigoOperadorUnario(Atributo &SS, const Atributo &S1, const Atributo &S2);
-
+bool funcaoDeclarada(string nome);
 string gerarCodigoPrototipo(string tipo, string nome, string listaParams);
+void adicionarFuncaoImplementada(string tipo, string nome, string listaParams);
 
 string gerarCodigoPrint(Atributo &S);
 
@@ -134,6 +136,8 @@ string gerarCodigoWhile(const Atributo &condicao, const Atributo &cod);
 string gerarCodigoDoWhile(const Atributo &condicao, const Atributo &cod);
 string gerarCodigoFor(const Atributo &init, const Atributo &condicao, const Atributo &upd, const Atributo &cod);
 string gerarCodigoSwitch(const Atributo &condicao, Atributo &cod);
+
+void verificarPrototiposDeclarados();
 
 %}
 
@@ -161,7 +165,9 @@ string gerarCodigoSwitch(const Atributo &condicao, Atributo &cod);
 %%
 
 S : TK_INICIO INCLUDES PROT VARS_GLOBAIS FUNCOES MAIN FUNCOES	
-      { cout << "// *****Welcome to the Game Of Thrones*****\n\n\n"
+      { 
+        verificarPrototiposDeclarados();
+        cout << "// *****Welcome to the Game Of Thrones*****\n\n\n"
         << $2.c << "#include <stdio.h>\n"
                    "#include <stdlib.h>\n"
                    "#include <string.h>\n"
@@ -200,7 +206,8 @@ FUNCOES : FUNCAO FUNCOES { $$.c = $1.c + $2.c; }
 
 FUNCAO : TIPO TK_ID '(' LISTA_ARGUMENTOS ')' BLOCO
         {
-            // TODO falta argumentos!
+            adicionarFuncaoImplementada($1.v, $2.v, $4.c);
+
             $$ = Atributo();
             $$.c = "\n" +
                    $1.v + " " + $2.v + "(" + $4.c + ") {\n" +
@@ -1065,9 +1072,32 @@ string gerarCodigoPrototipo(string tipo, string nome, string listaParams){
     params.push_back(p);
   }
 
-  SimboloFuncao prot = SimboloFuncao(nome, Tipo(tipo), params, true); // TODO implementar params
+  SimboloFuncao prot = SimboloFuncao(nome, Tipo(tipo), params, listaParams, true); // TODO implementar params
   tabelaFuncoes[nome] = prot;
   return codigo;
+}
+
+void verificarPrototiposDeclarados(){
+  for(const auto& kv : tabelaFuncoes){
+    if(kv.second.prototipo){
+      erro("A função " + tabelaFuncoes[kv.first].nome + "(" + tabelaFuncoes[kv.first].codigo_params + ") tem protótipo declarado mas não foi implementada.");
+    }
+  }
+}
+
+void adicionarFuncaoImplementada(string tipo, string nome, string listaParams){
+  if(funcaoDeclarada(nome)){
+    SimboloFuncao &f = tabelaFuncoes[nome];
+
+    if(f.prototipo){
+      if(f.codigo_params != listaParams)
+        erro("A função " + f.nome + " não corresponde à lista de argumentos do protótipo declarado.");
+
+      f.prototipo = false;
+    }
+    else
+      erro("A função " + f.nome + " já foi declarada.");
+  }
 }
 
 int main (int argc, char *argv[]){
