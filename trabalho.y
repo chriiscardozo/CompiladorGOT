@@ -1066,7 +1066,7 @@ string gerarCodigoPrototipo(string tipo, string nome, string listaParams){
   }
 
   SimboloFuncao prot = SimboloFuncao(nome, Tipo(tipo), params, true); // TODO implementar params
-
+  tabelaFuncoes[nome] = prot;
   return codigo;
 }
 
