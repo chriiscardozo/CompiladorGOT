@@ -78,6 +78,8 @@ struct SimboloFuncao {
 #define C_BOOL      "bool"
 #define C_VOID      "void"
 
+#define C_TK_BREAK  "breaker_of_chains"
+
 #define MAX_STR     256
 
 #define MAX_CASES 1000
@@ -91,6 +93,9 @@ int id_bloco = 0;
 string codigoVarsProcedimento = "";
 int id_label = 0;
 string tipo_retorno_atual = "";
+
+typedef pair<Atributo, string> SCase;
+vector<SCase> listaSCases;
 
 typedef map<string, SimboloFuncao> TSF;
 TSF tabelaFuncoes;
@@ -136,13 +141,12 @@ string gerarCodigoPrint(Atributo &S);
 string verificarTiposChamadaFuncao(string nome, string parametros);
 
 string gerarLabel();
-string geraCodigoCase(const Atributo &expressao, const Atributo &corpo);
 string gerarBreak();
 string gerarCodigoIfElse(const Atributo &condicao, const Atributo &cod_if, const Atributo &cod_else);
 string gerarCodigoWhile(const Atributo &condicao, const Atributo &cod);
 string gerarCodigoDoWhile(const Atributo &condicao, const Atributo &cod);
 string gerarCodigoFor(const Atributo &init, const Atributo &condicao, const Atributo &upd, const Atributo &cod);
-string gerarCodigoSwitch(const Atributo &condicao, Atributo &cod);
+string gerarCodigoSwitch(const Atributo &expr, const Atributo &cod);
 
 void verificarPrototiposDeclarados();
 
@@ -338,7 +342,7 @@ COMANDOS : COMANDO COMANDOS { $$.c = $1.c + $2.c; }
          | { $$ = Atributo(); }
          ;
 
-COMANDO : EXPRESSAO ';' { $$.c = $1.c; }
+COMANDO : EXPRESSAO ';'
         | COMANDO_IF
         | COMANDO_WHILE
         | COMANDO_DO_WHILE ';'
@@ -346,10 +350,10 @@ COMANDO : EXPRESSAO ';' { $$.c = $1.c; }
         | COMANDO_SWITCH
         | COMANDO_RETURN ';'
         | COMANDO_SCAN ';'
-        | COMANDO_PRINT ';' { $$ = Atributo(); $$.c = $1.c; }
+        | COMANDO_PRINT ';'
         | COMANDO_BREAK ';'
-        | BLOCO	{ $$.c = $1.c; }
-        | ';'
+        | BLOCO
+        | ';' { $$ = Atributo(); }
         ;
 
 
@@ -361,7 +365,6 @@ CHAMADA_FUNCAO : TK_ID '(' LISTA_PARAMETROS ')' {
                                                   $$.t = Tipo(tabelaFuncoes[$1.v].retorno.nome);
                                                   $$.v = gerarVarTemp($$.t);
                                                   $$.c = $3.c + TAB + $$.v + " = " + $1.v + "(" + lista + ");\n";
-                                                  
 
                                                 }
                ;
@@ -424,40 +427,42 @@ EXPRESSAO : EXPRESSAO TK_ADICAO EXPRESSAO
               Atributo A = buscaVariavel($1.v);
               string posicaoAcesso = validarAcessoArray($1.v, $2.c); 
               A.v = A.v + posicaoAcesso;
-              gerarCodigoOperadorBinario($$, A, $3, $4); }
-          | CHAMADA_FUNCAO {  }
+              gerarCodigoOperadorBinario($$, A, $3, $4);
+            }
+          | CHAMADA_FUNCAO
+            { $$ = $1; }
+          | '(' EXPRESSAO ')'
+            { $$ = $2; }
           | TERMINAL
             { $$ = $1; }
           ;
 
 TERMINAL : TK_ID ARRAY
-            { $$ = buscaVariavel($1.v); string posicaoAcesso = validarAcessoArray($1.v, $2.c); 
-              $$.v = $$.v + posicaoAcesso;
-            }
+           { $$ = buscaVariavel($1.v); string posicaoAcesso = validarAcessoArray($1.v, $2.c); 
+             $$.v = $$.v + posicaoAcesso;
+           }
          | TK_CTE_INT
-            { $$ = Atributo($1.v, C_INT); }
+           { $$ = Atributo($1.v, C_INT); }
          | TK_CTE_DOUBLE
-            { $$ = Atributo($1.v, C_DOUBLE); }
+           { $$ = Atributo($1.v, C_DOUBLE); }
          | TK_CTE_FLOAT
-            { $$ = Atributo($1.v, C_FLOAT); }
+           { $$ = Atributo($1.v, C_FLOAT); }
          | TK_CTE_CHAR
-            { $$ = Atributo($1.v, C_CHAR); }
+           { $$ = Atributo($1.v, C_CHAR); }
          | TK_CTE_STRING
-            { $$ = Atributo($1.v, C_STRING); }
+           { $$ = Atributo($1.v, C_STRING); }
          | TK_CTE_BOOL_TRUE
-            { $$ = Atributo("1", C_BOOL); }
+           { $$ = Atributo("1", C_BOOL); }
          | TK_CTE_BOOL_FALSE
-            { $$ = Atributo("0", C_BOOL); }
+           { $$ = Atributo("0", C_BOOL); }
          | TK_NULL
-            { $$ = Atributo("0", C_INT); }
-         | '(' EXPRESSAO ')'
-            { $$ = $2; }
+           { $$ = Atributo("0", C_INT); }
          ;
 
 COMANDO_IF : TK_IF '(' EXPRESSAO ')' BLOCO
-            { $$.c = gerarCodigoIfElse($3, $5, Atributo()); }
+             { $$.c = gerarCodigoIfElse($3, $5, Atributo()); }
            | TK_IF '(' EXPRESSAO ')' BLOCO TK_ELSE BLOCO
-            { $$.c = gerarCodigoIfElse($3, $5, $7); }
+             { $$.c = gerarCodigoIfElse($3, $5, $7); }
            ;
 
 COMANDO_WHILE : TK_WHILE '(' EXPRESSAO ')' BLOCO
@@ -465,11 +470,11 @@ COMANDO_WHILE : TK_WHILE '(' EXPRESSAO ')' BLOCO
               ;
 
 COMANDO_DO_WHILE : TK_DO BLOCO TK_WHILE '(' EXPRESSAO ')'
-                    { $$.c = gerarCodigoDoWhile($5, $2); }
+                   { $$.c = gerarCodigoDoWhile($5, $2); }
                  ;
 
 COMANDO_FOR : TK_FOR '(' EXPRESSAO_FOR ';' EXPRESSAO_FOR ';' EXPRESSAO_FOR ')' BLOCO
-                { $$.c = gerarCodigoFor($3, $5, $7, $9); }
+              { $$.c = gerarCodigoFor($3, $5, $7, $9); }
             ;
 
 EXPRESSAO_FOR : EXPRESSAO { $$ = $1; }
@@ -480,21 +485,20 @@ COMANDO_SWITCH : TK_SWITCH '(' EXPRESSAO ')' TK_COMECA_BLOCO LISTA_CASE TK_TERMI
                  { $$.c = gerarCodigoSwitch($3, $6); }
                ;
 
-LISTA_CASE : CASE LISTA_CASE { $$.c = $1.c + $2.c; }
-           | DEFAULT { $$.c = $1.c; }
-           | { $$ = Atributo(); }
+LISTA_CASE : CASE LISTA_CASE
+           | DEFAULT
+           |
            ;
 
-CASE : TK_CASE EXPRESSAO ':' CORPO
-       { $$.c = geraCodigoCase($2, $4); }
+CASE : TK_CASE TERMINAL ':' CORPO
+       { listaSCases.push_back(make_pair($2, $4.c)); }
      ;
 
 DEFAULT : TK_DEFAULT ':' CORPO
-          { $$.c = $3.c; }
+          { listaSCases.push_back(make_pair(Atributo(), $3.c)); }
         ;
 
-COMANDO_BREAK : TK_BREAK
-                { $$.c = gerarBreak(); }
+COMANDO_BREAK : TK_BREAK { $$.c = gerarBreak(); }
               ;
 
 COMANDO_RETURN : TK_RETURN EXPRESSAO { $$ = Atributo(); $$.c = gerarCodigoReturn($2); }
@@ -885,14 +889,12 @@ string trim(string const& str)
     return str.substr(first, last-first+1);
 }
 
-void replaceAll( string &s, const string &search, const string &replace ) {
-    for( size_t pos = 0; ; pos += replace.length() ) {
+void replaceAll(string &s, const string &search, const string &replace) {
+    for (size_t pos = 0; ; pos += replace.length()) {
         // Locate the substring to replace
-        pos = s.find( search, pos );
-        if( pos == string::npos ) break;
-        // Replace by erasing and inserting
-        s.erase( pos, search.length() );
-        s.insert( pos, replace );
+        pos = s.find(search, pos);
+        if (pos == string::npos) break;
+        s.replace(pos, search.length(), replace);
     }
 }
 
@@ -1033,19 +1035,6 @@ string gerarLabel() {
     return string("LABEL_") + toStr(id_label++);
 }
 
-string geraCodigoCase(const Atributo &expressao, const Atributo &corpo) {
-    string codigo;
-    /* Por algum motivo a concatenação na mesma linha não foi no meu pc */
-    codigo += "[";
-    codigo +=  (expressao.c[4] == 't') ? ( "#(" + expressao.c + ")#" + corpo.c) : ("#(" + expressao.v + ")#" + corpo.c); // ? É Expressao : É constante
-    codigo += "]\n";
-    return codigo;
-}
-
-string gerarBreak() {
-    return TAB "breaker_of_chains;\n";
-}
-
 string gerarCodigoIfElse(const Atributo &condicao, const Atributo &cod_if, const Atributo &cod_else) {
     if (condicao.t.nome != C_BOOL)
         erro("Expressão não booleana."); // TODO fazer uma mensagem melhor
@@ -1116,61 +1105,39 @@ string gerarCodigoFor(const Atributo &init, const Atributo &condicao, const Atri
     return codigo;
 }
 
-string gerarCodigoSwitch(const Atributo &cond, Atributo &cod) {
-    string codigo;
+string gerarCodigoSwitch(const Atributo &expr, const Atributo &cod) {
+    string condicoes;
+    string blocos;
 
-    string condicao_switch;
-    if( cond.c[4] == 't' ) { // É Expressao
-        codigo += cond.c;
-        size_t pos1 = cond.c.rfind("\n", cond.c.size()-2 );
-        size_t pos2 = cond.c.rfind("=", cond.c.size()-2 );
-        condicao_switch = cond.c.substr(pos1+5,pos2-pos1-6);
-    } else {                 // É constante
-        condicao_switch = cond.v;
-    }
-
-    int id_cases = 0;
-    string cond_cases[MAX_CASES];
-    while(1) {
-        size_t pos1 = cod.c.find("#(");
-        if (pos1==string::npos) break;
-        size_t pos2 = cod.c.find(")#", pos1);
-        string buffer = cod.c.substr(pos1+2, pos2-pos1-2);
-        if(buffer.find("temp")!=std::string::npos) {
-            codigo += buffer;
-            size_t pos1 = buffer.rfind("\n", buffer.size()-2 );
-            size_t pos2 = buffer.rfind("=", buffer.size()-2 );
-            cond_cases[id_cases++] = buffer.substr(pos1+5,pos2-pos1-6);
-        } else {
-            cond_cases[id_cases++] = buffer;
+    for (const auto &c : listaSCases) {
+        string label = gerarLabel();
+        if (c.first.v != "") {
+            Atributo a;
+            gerarCodigoOperadorBinario(a, expr, Atributo("=="), c.first);
+            condicoes += a.c +
+                         TAB "if (" + a.v + ") goto " + label + ";\n";
+            blocos += label + ":\n" +
+                      c.second;
         }
-        cod.c.erase(pos1,pos2-pos1+2);
+        else {
+            condicoes += TAB "goto " + label + ";\n";
+            blocos += label + ":\n" +
+                      c.second;
+        }
     }
 
     string label_end = gerarLabel();
+    condicoes += TAB "goto " + label_end + ";\n";
+    blocos += label_end + ":\n";
 
-    int aux_id_label = id_label;
-    for(int id=0; id < id_cases; ++id) {
-        codigo += TAB "if (" + condicao_switch + "==" + cond_cases[id] + ") goto " + gerarLabel() + ";\n";
-    }
+    replaceAll(blocos, C_TK_BREAK, "goto " + label_end);
 
-    string label_default = gerarLabel();
-    codigo += TAB "goto " + label_default + ";\n";
-    
-    for(int id=0; id < id_cases; ++id) {
-        size_t pos1 = cod.c.find("[");
-        size_t pos2 = cod.c.find("]");
-        string buffer = cod.c.substr(pos1+1,pos2-1);
-        codigo += "LABEL_" + toStr(aux_id_label+id) + ":\n";
-        codigo += buffer;
-        cod.c.erase(pos1,pos2-pos1+2);
-    }
+    listaSCases.clear();
+    return condicoes + blocos;
+}
 
-    codigo += label_default + ":\n" + cod.c;
-    codigo += label_end + ":";
-    replaceAll(codigo, "breaker_of_chains", "goto " + label_end);
-      
-    return codigo;
+string gerarBreak() {
+    return TAB "breaker_of_chains;\n";
 }
 
 bool funcaoDeclarada(string nome){
@@ -1240,11 +1207,9 @@ vector<Argumento> converteParaVectorArgumentos(vector<string> params_split){
 }
 
 string gerarCodigoReturn(Atributo S2){
-
-  if(S2.t.nome == tipo_retorno_atual)
+    if (S2.t.nome != tipo_retorno_atual)
+        erro("Tipo de retorno deve ser igual ao retorno da função.");
     return S2.c + TAB + "return " + S2.v + ";\n";
-  else
-    erro("Tipo de retorno deve ser igual ao retorno da função.");
 }
 
 string verificarTiposChamadaFuncao(string nome, string parametros){

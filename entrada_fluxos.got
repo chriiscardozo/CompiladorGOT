@@ -32,64 +32,21 @@ First_of_his_name()
 
     inteiro1 = 2;
     which_house_do_you_belong_in(inteiro1){
-		house (1000+1000+8+1): 
-			maester_write(1);
+        house 1000: 
+            maester_write(1);
             maester_write("\n");
             breaker_of_chains;
         house 2:
             maester_write(2);
             maester_write("\n");
-		house 300: ;
+        house 300: ;
             maester_write(3);
             maester_write("\n");
             breaker_of_chains;
-		free_folk:
+        free_folk:
             maester_write(4);
             maester_write("\n");
             breaker_of_chains;
     }
-
-    maester_write("\n");
-
-    inteiro1 = 2;
-    which_house_do_you_belong_in(inteiro1+998){
-		house (499*2+2): 
-			maester_write(1);
-            maester_write("\n");
-            breaker_of_chains;
-        house 2:
-            maester_write(2);
-            maester_write("\n");
-		house 300: ;
-            maester_write(3);
-            maester_write("\n");
-            breaker_of_chains;
-		free_folk:
-            maester_write(4);
-            maester_write("\n");
-            breaker_of_chains;
-    }
-
-    maester_write("\n");
-
-    inteiro1 = 0;
-    which_house_do_you_belong_in(inteiro1+998){
-		house (499*2+2): 
-			maester_write(1);
-            maester_write("\n");
-            breaker_of_chains;
-        house 2:
-            maester_write(2);
-            maester_write("\n");
-		house 300: ;
-            maester_write(3);
-            maester_write("\n");
-            breaker_of_chains;
-		free_folk:
-            maester_write(4);
-            maester_write("\n");
-            breaker_of_chains;
-    }
-
 
 and_now_his_watch_is_ended
