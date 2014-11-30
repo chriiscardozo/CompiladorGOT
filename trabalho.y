@@ -90,6 +90,7 @@ int yyparse();
 int id_bloco = 0;
 string codigoVarsProcedimento = "";
 int id_label = 0;
+string tipo_retorno_atual = "";
 
 typedef map<string, SimboloFuncao> TSF;
 TSF tabelaFuncoes;
@@ -127,6 +128,8 @@ void gerarCodigoOperadorUnario(Atributo &SS, const Atributo &S1, const Atributo 
 bool funcaoDeclarada(string nome);
 string gerarCodigoPrototipo(string tipo, string nome, string listaParams);
 void adicionarFuncaoImplementada(string tipo, string nome, string listaParams);
+
+string gerarCodigoReturn(Atributo S2);
 
 string gerarCodigoPrint(Atributo &S);
 
@@ -199,32 +202,42 @@ MAIN : COMECA_MAIN CORPO TK_TERMINA_MAIN
         }
      ;
 
-COMECA_MAIN : TABELA_VARS TK_MAIN
+COMECA_MAIN : TABELA_VARS TK_MAIN { tipo_retorno_atual = C_INT; }
             ;
 
 FUNCOES : FUNCAO FUNCOES { $$.c = $1.c + $2.c; }
         | { $$ = Atributo(); }
         ;
 
-FUNCAO : TIPO TK_ID '(' LISTA_ARGUMENTOS ')' BLOCO
+FUNCAO : CABECALHO_FUNCAO BLOCO
         {
-            adicionarFuncaoImplementada($1.v, $2.v, $4.c);
-
-            string t = $1.v;
-            if($1.v == C_BOOL)
-              t = C_INT;
-
             $$ = Atributo();
-            $$.c = "\n" +
-                   t + " " + $2.v + "(" + $4.c + ") {\n" +
+            $$.t = $1.t;
+            $$.c = $1.c + "{\n" +
                    gerarCodigoVarsTemp() +
                    codigoVarsProcedimento + '\n' +
-                   $6.c +
+                   $2.c +
                    "}\n";
+
             resetVarsTemp();
             resetVariaveisProcedimento();
         }
        ;
+
+CABECALHO_FUNCAO : TIPO TK_ID '(' LISTA_ARGUMENTOS ')' { 
+                    adicionarFuncaoImplementada($1.v, $2.v, $4.c);
+
+                    string t = $1.v;
+                    if($1.v == C_BOOL)
+                      t = C_INT;
+
+                    $$ = Atributo();
+                    $$.t = Tipo($1.v);
+                    $$.c = "\n" + t + " " + $2.v + "(" + $4.c + ")";
+
+                    tipo_retorno_atual = $1.v;
+                 }
+                 ;
 
 INCLUDES : TK_INCLUDE TK_BIB_INCLUDE INCLUDES { $$ = Atributo(); $$.c = gerarIncludeC($2.v) + $3.c; }
          | { $$ = Atributo(); }
@@ -403,11 +416,11 @@ TERMINAL : TK_ID ARRAY
          | TK_CTE_STRING
             { $$ = Atributo($1.v, C_STRING); }
          | TK_CTE_BOOL_TRUE
-            { $$ = Atributo(/*$1.v*/"1", C_BOOL); }
+            { $$ = Atributo("1", C_BOOL); }
          | TK_CTE_BOOL_FALSE
-            { $$ = Atributo(/*$1.v*/"0", C_BOOL); }
+            { $$ = Atributo("0", C_BOOL); }
          | TK_NULL
-            { }
+            { $$ = Atributo("0", C_INT); }
          | '(' EXPRESSAO ')'
             { $$ = $2; }
          ;
@@ -455,7 +468,15 @@ COMANDO_BREAK : TK_BREAK
                 { $$.c = gerarBreak(); }
               ;
 
-COMANDO_RETURN : TK_RETURN EXPRESSAO
+COMANDO_RETURN : TK_RETURN EXPRESSAO { $$ = Atributo(); $$.c = gerarCodigoReturn($2); }
+               | TK_RETURN {
+                  $$ = Atributo();
+
+                  if(tipo_retorno_atual == C_VOID)
+                    $$.c = TAB "return ;\n";
+                  else
+                    erro("Tipo de retorno deve ser igual ao retorno da função.");
+                }
                ;
 
 COMANDO_SCAN : TK_SCAN '(' TK_ID ')'
@@ -613,6 +634,7 @@ void inicializaResultadoOperador() {
     resultadoOperador["char==char"] = Tipo("bool");
     resultadoOperador["char==int"] = Tipo("bool");
     resultadoOperador["int==char"] = Tipo("bool");
+    resultadoOperador["bool==bool"] = Tipo("bool");
 
     // !=
     resultadoOperador["int!=int"] = Tipo("bool");
@@ -628,6 +650,7 @@ void inicializaResultadoOperador() {
     resultadoOperador["char!=char"] = Tipo("bool");
     resultadoOperador["char!=int"] = Tipo("bool");
     resultadoOperador["int!=char"] = Tipo("bool");
+    resultadoOperador["bool!=bool"] = Tipo("bool");
 
     // ||
     resultadoOperador["bool||bool"] = Tipo("bool");
@@ -1158,6 +1181,14 @@ vector<Parametro> converteParaVectorParametros(vector<string> params_split){
   }
 
   return params;
+}
+
+string gerarCodigoReturn(Atributo S2){
+
+  if(S2.t.nome == tipo_retorno_atual)
+    return S2.c + TAB + "return " + S2.v + ";\n";
+  else
+    erro("Tipo de retorno deve ser igual ao retorno da função.");
 }
 
 int main (int argc, char *argv[]){

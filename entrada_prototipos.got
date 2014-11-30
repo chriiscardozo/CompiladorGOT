@@ -1,25 +1,9 @@
 When you play the game of thrones, you win or you die
 
-squire martell bar(martell robb, martell arya);
-squire martell foo();
-
-ITS_KNOWN robb AS martell;
+squire stark fibonacci(stark termo);
 
 First_of_his_name()
 	
+
+
 and_now_his_watch_is_ended
-
-martell bar(martell robb, martell arya){
-	ITS_KNOWN a AS martell;
-	
-	maester_write(robb);
-
-}
-
-martell foo(){
-
-}
-
-martell teste(){
-
-}
