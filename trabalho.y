@@ -136,6 +136,7 @@ void adicionarFuncaoImplementada(string tipo, string nome, string listaParams);
 
 string gerarCodigoReturn(const Atributo &S2);
 
+string gerarCodigoScan(const Atributo &S);
 string gerarCodigoPrint(const Atributo &S);
 
 string verificarTiposChamadaFuncao(string nome, string parametros);
@@ -438,7 +439,9 @@ EXPRESSAO : EXPRESSAO TK_ADICAO EXPRESSAO
           ;
 
 TERMINAL : TK_ID ARRAY
-           { $$ = buscaVariavel($1.v); string posicaoAcesso = validarAcessoArray($1.v, $2.c); 
+           {
+             $$ = buscaVariavel($1.v);
+             string posicaoAcesso = validarAcessoArray($1.v, $2.c); 
              $$.v = $$.v + posicaoAcesso;
            }
          | TK_CTE_INT
@@ -512,7 +515,12 @@ COMANDO_RETURN : TK_RETURN EXPRESSAO { $$ = Atributo(); $$.c = gerarCodigoReturn
                 }
                ;
 
-COMANDO_SCAN : TK_SCAN '(' TK_ID ')'
+COMANDO_SCAN : TK_SCAN '(' TK_ID ARRAY ')'
+               {
+                Atributo a = buscaVariavel($3.v);
+                a.v += validarAcessoArray($3.v, $4.c);
+                $$.c = gerarCodigoScan(a);
+               }
              ;
 
 COMANDO_PRINT : TK_PRINT '(' EXPRESSAO ')' { $$.c = gerarCodigoPrint($3); }
@@ -740,23 +748,24 @@ string declararVariavel(string tipo_base, string vars, int bloco) {
         Tipo tipo_verificado = tipo_base;
         string nome_verificado = vetorVars[i];
 
-        if (vetorVars[i].find("[") != string::npos) {          
-            vector<string> dims = traduzDimensoesArray(vetorVars[i]);
+        size_t pos_dims = vetorVars[i].find("[");
+        if (pos_dims != string::npos) {
+            vector<string> dims = traduzDimensoesArray(vetorVars[i].substr(pos_dims));
 
-            if (dims.size() > 3)
+            if (dims.size() > 2)
                 erro("Array com dimensoes invalidas. (Max = 2 dimensoes)");
 
-            // posições geradas pelo split => [ 0 => var_nome, 1 =>  dim1, 2 =>  dim2]
-            if (dims.size() > 2){
+            // posições geradas pelo split => [ 0 =>  dim0, 1 =>  dim1 ]
+            if (dims.size() > 1) {
                 tipo_verificado.ndim = 2;
-                tipo_verificado.t_dim[0] = atoi(dims[1].c_str());
-                tipo_verificado.t_dim[1] = atoi(dims[2].c_str());
+                tipo_verificado.t_dim[0] = atoi(dims[0].c_str());
+                tipo_verificado.t_dim[1] = atoi(dims[1].c_str());
             }
             else {
                 tipo_verificado.ndim = 1;
-                tipo_verificado.t_dim[0] = atoi(dims[1].c_str());
+                tipo_verificado.t_dim[0] = atoi(dims[0].c_str());
             }
-            nome_verificado = dims[0];
+            nome_verificado = vetorVars[i].substr(0, pos_dims);
         }
 
         inserirVariavelTabela(tabela, tipo_verificado, nome_verificado, bloco);
@@ -785,9 +794,10 @@ string declararVariavel(string tipo_base, string vars, int bloco) {
 }
 
 vector<string> traduzDimensoesArray(string aux) {
-    replaceAll(aux, "[", ",");
-    replaceAll(aux, "]", "");
-    vector<string> dims = split(aux, ',');
+    if (aux == "")
+        return vector<string>();
+    replaceAll(aux, "][", ",");
+    vector<string> dims = split(aux.substr(1, aux.length()-2), ',');
     return dims;
 }
 
@@ -798,22 +808,22 @@ string validarAcessoArray(string var, string dims) {
     Atributo variavel = buscaVariavel(var);
 
     if (dimsAcesso.size() > 0) {
-        if (dimsAcesso.size()-1 != variavel.t.ndim) {
+        if (dimsAcesso.size() != variavel.t.ndim) {
             erro("Acesso de indice invalido: A variavel " + var + " possui " + toStr(variavel.t.ndim) +
                 " dimensoes. Você usou " + toStr(dimsAcesso.size()) + " dimensoes. Use a quantidade correta.");
         }
 
-        for(int i = 1; i < dimsAcesso.size(); i++){
-            if(atoi(dimsAcesso[i].c_str()) >= variavel.t.t_dim[i-1]
+        for(int i = 0; i < dimsAcesso.size(); i++){
+            if(atoi(dimsAcesso[i].c_str()) >= variavel.t.t_dim[i]
                 || atoi(dimsAcesso[i].c_str()) < 0)
-                erro("Indice fora dos limites. Tentou acessar posição " +  dimsAcesso[i] + " no total de " + toStr(variavel.t.t_dim[i-1]) +
-                    "(de 0 a " + toStr(variavel.t.t_dim[i-1]-1) + ") na dimensao " + toStr(i-1));
+                erro("Indice fora dos limites. Tentou acessar posição " +  dimsAcesso[i] + " no total de " + toStr(variavel.t.t_dim[i]) +
+                    "(de 0 a " + toStr(variavel.t.t_dim[i]-1) + ") na dimensao " + toStr(i));
         }
 
         if (variavel.t.ndim == 1) 
-            posicao = atoi(dimsAcesso[1].c_str());
+            posicao = atoi(dimsAcesso[0].c_str());
         else
-            posicao = variavel.t.t_dim[1]*atoi(dimsAcesso[1].c_str()) + atoi(dimsAcesso[2].c_str());
+            posicao = variavel.t.t_dim[1]*atoi(dimsAcesso[0].c_str()) + atoi(dimsAcesso[1].c_str());
 
         if(variavel.t.nome == C_STRING){
           codigo = "[" + toStr(posicao*256) + "]";
@@ -998,6 +1008,25 @@ void gerarCodigoOperadorUnario(Atributo &SS, const Atributo &S1, const Atributo 
     SS.v = gerarVarTemp(SS.t);
     SS.c = S2.c +
            TAB + SS.v + " = " + S1.v + S2.v + ";\n";
+}
+
+string gerarCodigoScan(const Atributo &S) {
+  string codigo = string(TAB) + "scanf";
+  
+  if(S.t.nome == C_INT)
+    codigo += "(\"%d\", &" + S.v + ");\n";
+  else if(S.t.nome == C_CHAR)
+    codigo += "(\"%c\", &" + S.v + ");\n";
+  else if(S.t.nome == C_FLOAT)
+    codigo += "(\"%f\", &" + S.v + ");\n";
+  else if(S.t.nome == C_DOUBLE)
+    codigo += "(\"%lf\", &" + S.v + ");\n";
+  else if(S.t.nome == C_STRING)
+    codigo += "(\"%s\", &" + S.v + ");\n";
+  else if(S.t.nome == C_BOOL)
+    codigo += "(\"%d\", &" + S.v + ");\n";
+
+  return codigo;
 }
 
 string gerarCodigoPrint(const Atributo &S){

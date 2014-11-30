@@ -6,13 +6,13 @@ When you play the game of thrones, you win or you die
 ITS_KNOWN a, b, c, d AS Stark;
 
 Stark foo() {
-	ITS_KNOWN a, b, c, d AS Targaryen;
-	ITS_KNOWN e, f AS Lannister;
-	e+f;
-	a = b+c;
-	a = "asdf" + e + d;
-	b = 'd';
-	a+b == "123" + c+d;
+    ITS_KNOWN a, b, c, d AS Targaryen;
+    ITS_KNOWN e, f AS Lannister;
+    e+f;
+    a = b+c;
+    a = "asdf" + e + d;
+    b = 'd';
+    a+b == "123" + c+d;
 }
 
 First_of_his_name()
@@ -66,4 +66,10 @@ Stark bar() winter_is_coming
           ITS_KNOWN vetor_string[10] AS Targaryen;
        }
     }
+
+    maester_read(a);
+    maester_read(b);
+    maester_read(d);
+    maester_read(x[1][2]);
+
 all_functions_must_die
