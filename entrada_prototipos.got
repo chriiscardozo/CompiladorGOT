@@ -7,21 +7,11 @@ Its_known daenerys, aux, vetor[10] As Targaryen;
 First_of_his_name()
 	Its_known limite, resultado As Stark;
 
-	limite = 5;
+    limite = 0 - 1;
 
-    daenerys = "Daenerys";
-    daenerys = daenerys + " " + "Targaryen";
-    aux = ".\n";
-    daenerys = daenerys + aux;
-
-    #HODOR resultado = fibonacci(limite);
-    maester_write(daenerys);
-
-    vetor[0] = "Karl";
-    vetor[1] = "Drogo";
-    vetor[3] = vetor[0] + " " + vetor[1] + ".\n";
-    
-    maester_write(vetor[3]);
+    resultado = fibonacci(fibonacci(limite + 1 + 10 - 2)) / 2 * 2;
+    maester_write(resultado);
+    maester_write("\n");
 
 and_now_his_watch_is_ended
 
@@ -36,5 +26,5 @@ winter_is_coming
         b = a - b;
     }
 
-    The_Lannister_Send_Their_Regards a;
+    The_Lannister_Send_Their_Regards b;
 all_functions_must_die

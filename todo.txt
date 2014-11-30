@@ -1,6 +1,5 @@
-- argumentos de funcoes
-- chamada de funcoes com parametros
+- comparação de string
 - passagem por referencia (deixar para o final!)
-- break
-- return
 - switch-case
+- break
+- pipes! (5 pontos)

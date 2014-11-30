@@ -133,6 +133,8 @@ string gerarCodigoReturn(Atributo S2);
 
 string gerarCodigoPrint(Atributo &S);
 
+string verificarTiposChamadaFuncao(string nome, string parametros);
+
 string gerarLabel();
 string geraCodigoCase(const Atributo &expressao, const Atributo &corpo);
 string gerarBreak();
@@ -351,15 +353,42 @@ COMANDO : EXPRESSAO ';' { $$.c = $1.c; }
         ;
 
 
-CHAMADA_FUNCAO : TK_ID '(' LISTA_PARAMETROS ')' { $$ = Atributo(); /*gerarCodigoChamadaFuncao($$, $1, $3);*/ }
+CHAMADA_FUNCAO : TK_ID '(' LISTA_PARAMETROS ')' { 
+                                                  $$ = Atributo();
+
+                                                  // $3.v => tipo var, tipo var, etc.
+                                                  string lista = verificarTiposChamadaFuncao($1.v, $3.v);
+                                                  $$.t = Tipo(tabelaFuncoes[$1.v].retorno.nome);
+                                                  $$.v = gerarVarTemp($$.t);
+                                                  $$.c = $3.c + TAB + $$.v + " = " + $1.v + "(" + lista + ");\n";
+                                                  
+
+                                                }
                ;
 
 LISTA_PARAMETROS : PARAMETROS { $$ = Atributo(); $$.c = $1.c; $$.v = $1.v; }
                  | { $$ = Atributo(); }
                  ;
 
-PARAMETROS : EXPRESSAO ',' PARAMETROS { $$ = Atributo(); $$.v = $1.v + "," + $3.v; $$.c = $1.c + $3.c; }
-           | EXPRESSAO { $$ = Atributo($1.v, $1.t, $1.c); }
+PARAMETROS : EXPRESSAO ',' PARAMETROS {
+                                        $$ = Atributo();
+                                        string endereco = "";
+
+                                        if($1.t.nome == C_STRING && $1.t.ndim > 0)
+                                          endereco = "&";
+
+                                        $$.v = $1.t.nome + " " + $1.v + "," + $3.v;
+                                        $$.c = $1.c + $3.c;
+
+                                      }
+           | EXPRESSAO {
+                          string endereco = "";
+                          if($1.t.nome == C_STRING && $1.t.ndim > 0)
+                            endereco = "&";
+
+                          $$ = Atributo($1.t.nome + " " + $1.v, $1.t, $1.c);
+
+                       }
            ;
 
 EXPRESSAO : EXPRESSAO TK_ADICAO EXPRESSAO
@@ -395,8 +424,8 @@ EXPRESSAO : EXPRESSAO TK_ADICAO EXPRESSAO
               Atributo A = buscaVariavel($1.v);
               string posicaoAcesso = validarAcessoArray($1.v, $2.c); 
               A.v = A.v + posicaoAcesso;
-              gerarCodigoOperadorBinario($$, A, $3, $4); } // TODO Falta atribuir para array
-          | CHAMADA_FUNCAO
+              gerarCodigoOperadorBinario($$, A, $3, $4); }
+          | CHAMADA_FUNCAO {  }
           | TERMINAL
             { $$ = $1; }
           ;
@@ -782,7 +811,6 @@ string validarAcessoArray(string var, string dims) {
         else
             posicao = variavel.t.t_dim[1]*atoi(dimsAcesso[1].c_str()) + atoi(dimsAcesso[2].c_str());
 
-        // TODO verificar caso de array de strings
         if(variavel.t.nome == C_STRING){
           codigo = "[" + toStr(posicao*256) + "]";
         }
@@ -848,6 +876,13 @@ vector<string> split(string s, char delim){
     while (getline(ss, item, delim))
         elems.push_back(item);
     return elems;
+}
+
+string trim(string const& str)
+{
+    size_t first = str.find_first_not_of(' ');
+    size_t last  = str.find_last_not_of(' ');
+    return str.substr(first, last-first+1);
 }
 
 void replaceAll( string &s, const string &search, const string &replace ) {
@@ -1013,7 +1048,7 @@ string gerarBreak() {
 
 string gerarCodigoIfElse(const Atributo &condicao, const Atributo &cod_if, const Atributo &cod_else) {
     if (condicao.t.nome != C_BOOL)
-        erro("expressao nao booleana"); // TODO fazer uma mensagem melhor
+        erro("Expressão não booleana."); // TODO fazer uma mensagem melhor
     string codigo;
     string label_if  = gerarLabel();
     string label_end = gerarLabel();
@@ -1030,7 +1065,7 @@ string gerarCodigoIfElse(const Atributo &condicao, const Atributo &cod_if, const
 
 string gerarCodigoWhile(const Atributo &condicao, const Atributo &cod) {
     if (condicao.t.nome != C_BOOL)
-        erro("expressao nao booleana"); // TODO fazer uma mensagem melhor
+        erro("Expressão não booleana."); // TODO fazer uma mensagem melhor
     string codigo;
     string label_if  = gerarLabel();
     string label_cod = gerarLabel();
@@ -1049,7 +1084,7 @@ string gerarCodigoWhile(const Atributo &condicao, const Atributo &cod) {
 
 string gerarCodigoDoWhile(const Atributo &condicao, const Atributo &cod) {
     if (condicao.t.nome != C_BOOL)
-        erro("expressao nao booleana"); // TODO fazer uma mensagem melhor
+        erro("Expressão não booleana."); // TODO fazer uma mensagem melhor
     string codigo;
     string label_cod = gerarLabel();
     codigo = label_cod + ":\n" +
@@ -1062,7 +1097,7 @@ string gerarCodigoDoWhile(const Atributo &condicao, const Atributo &cod) {
 
 string gerarCodigoFor(const Atributo &init, const Atributo &condicao, const Atributo &upd, const Atributo &cod) {
     if (condicao.t.nome != C_BOOL)
-        erro("expressao nao booleana"); // TODO fazer uma mensagem melhor
+        erro("Expressão não booleana."); // TODO fazer uma mensagem melhor
     string codigo;
     string label_if  = gerarLabel();
     string label_cod = gerarLabel();
@@ -1158,7 +1193,7 @@ string gerarCodigoPrototipo(string tipo, string nome, string listaParams){
 
   params = converteParaVectorArgumentos(params_split);
 
-  SimboloFuncao prot = SimboloFuncao(nome, Tipo(tipo), params, listaParams, true); // TODO implementar params
+  SimboloFuncao prot = SimboloFuncao(nome, Tipo(tipo), params, listaParams, true);
   tabelaFuncoes[nome] = prot;
   return codigo;
 }
@@ -1196,8 +1231,8 @@ vector<Argumento> converteParaVectorArgumentos(vector<string> params_split){
   vector<Argumento> params;
 
   for(int i = 0; i < params_split.size(); i++){
-    vector<string> definicao_t_var = split(params_split[i], ' ');
-    Argumento p = Argumento(definicao_t_var[0], Tipo(definicao_t_var[1]));
+    vector<string> definicao_t_var = split(trim(params_split[i]), ' ');
+    Argumento p = Argumento(definicao_t_var[1], Tipo(definicao_t_var[0]));
     params.push_back(p);
   }
 
@@ -1210,6 +1245,31 @@ string gerarCodigoReturn(Atributo S2){
     return S2.c + TAB + "return " + S2.v + ";\n";
   else
     erro("Tipo de retorno deve ser igual ao retorno da função.");
+}
+
+string verificarTiposChamadaFuncao(string nome, string parametros){
+  string codigo = "";
+  vector<string> vetor_params = split(parametros, ',');
+
+  if(!funcaoDeclarada(nome))
+    erro("Função " + nome +" não foi declarada.");
+
+  SimboloFuncao f = tabelaFuncoes[nome];
+
+  if(f.params.size() != vetor_params.size())
+    erro("Quantidade de argumentos para função " + nome + " está incorreta.");
+
+  for(int i = 0; i < vetor_params.size(); i++){
+    vector<string> descricaoParam = split(vetor_params[i], ' '); // 0 => tipo e 1 => nome
+
+    if(descricaoParam[0] != f.params[i].tipo.nome)
+      erro("Parâmetro " + toStr(i+1) + " inválido para função " + nome);
+
+    if(i != 0) codigo = codigo + ", ";
+    codigo = codigo + descricaoParam[1];
+  }
+
+  return codigo;
 }
 
 int main (int argc, char *argv[]){
