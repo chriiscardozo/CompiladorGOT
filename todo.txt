@@ -1,5 +1,5 @@
 - função com tipo de retorno string
 - passagem por referencia (deixar para o final!) A.K.A não fazer :p
 - switch-case (nao funciona switch dentro de switch)
-- break
+- break (falta verificar se o break e' valido)
 - pipes! (5 pontos)
