@@ -44,6 +44,25 @@ struct SimboloVariavel{
         : nome(nome), t(tipo), bloco(bloco) {}
 };
 
+struct Parametro {
+  string nome;
+  Tipo tipo;
+
+  Parametro(){}
+  Parametro(string nome, Tipo tipo) : nome(nome), tipo(tipo) {}
+};
+
+struct SimboloFuncao {
+  string nome;
+  Tipo retorno;
+  bool prototipo; // TRUE => Apenas prototipo ; FALSE => Já com corpo declarado
+  vector<Parametro> params;
+
+  SimboloFuncao() {}
+  SimboloFuncao(string nome, Tipo retorno, vector<Parametro> params, bool prototipo = false)
+    : nome(nome), retorno(retorno), params(params), prototipo(prototipo) {}
+};
+
 #define YYSTYPE     Atributo
 
 #define COLOR_RED   "\x1B[31m"
@@ -70,6 +89,9 @@ int yyparse();
 int id_bloco = 0;
 string codigoVarsProcedimento = "";
 int id_label = 0;
+
+typedef map<string, SimboloFuncao> TSF;
+TSF tabelaFuncoes;
 
 typedef map<string, SimboloVariavel> TSV;
 vector<TSV> tabelaVariaveis;
@@ -99,6 +121,8 @@ string gerarCodigoVarsTemp();
 string gerarVarTemp(const Tipo &t);
 void gerarCodigoOperadorBinario(Atributo &SS, const Atributo &S1, const Atributo &S2, const Atributo &S3);
 void gerarCodigoOperadorUnario(Atributo &SS, const Atributo &S1, const Atributo &S2);
+
+string gerarCodigoPrototipo(string tipo, string nome, string listaParams);
 
 string gerarCodigoPrint(Atributo &S);
 
@@ -193,7 +217,10 @@ INCLUDES : TK_INCLUDE TK_BIB_INCLUDE INCLUDES { $$ = Atributo(); $$.c = gerarInc
          | { $$ = Atributo(); }
          ;
 
-PROT : TK_PROTOTIPO TIPO TK_ID '(' LISTA_ARGUMENTOS ')' ';' PROT
+PROT : TK_PROTOTIPO TIPO TK_ID '(' LISTA_ARGUMENTOS ')' ';' PROT {
+         $$ = Atributo();
+         $$.c = gerarCodigoPrototipo($2.v, $3.v, $5.c) + "\n" + $8.c;
+       }
      | { $$ = Atributo(); }
      ;
 
@@ -206,12 +233,12 @@ TIPO : TK_INT     { $$ = Atributo(C_INT);     }
      | TK_VOID    { $$ = Atributo(C_VOID);    }
      ;
 
-LISTA_ARGUMENTOS : ARGUMENTOS
+LISTA_ARGUMENTOS : ARGUMENTOS { $$ = Atributo(); $$.c = $1.c; }
                  | { $$ = Atributo(); }
                  ;
 
-ARGUMENTOS : TIPO TK_ID ARRAY ',' ARGUMENTOS
-           | TIPO TK_ID ARRAY
+ARGUMENTOS : TIPO TK_ID ARRAY ',' ARGUMENTOS { $$ = Atributo(); $$.c = $1.v + " " + $2.v + $3.c + ", " + $5.c; }
+           | TIPO TK_ID ARRAY { $$ = Atributo(); $$.c = $1.v + " " + $2.v + $3.c; }
            ;
 
 VARS_GLOBAIS : TABELA_VARS VAR_GLOBAL VARS_GLOBAIS { $$ = Atributo();  $$.c = $1.c + $2.c; }
@@ -1016,6 +1043,31 @@ string gerarCodigoSwitch(const Atributo &cond, Atributo &cod) {
     replaceAll(codigo, "breaker_of_chains", "goto " + label_end);
       
     return codigo;
+}
+
+bool funcaoDeclarada(string nome){
+    return tabelaFuncoes.find(nome) != tabelaFuncoes.end();
+}
+
+string gerarCodigoPrototipo(string tipo, string nome, string listaParams){
+  string codigo = "";
+  vector<string> params_split = split(listaParams, ',');
+  vector<Parametro> params;
+
+  if(funcaoDeclarada(nome))
+    erro("A função " + nome + " já foi declarada.");
+  
+  codigo = tipo + " " + nome + "(" + listaParams + ");";
+
+  for(int i = 0; i < params_split.size(); i++){
+    vector<string> definicao_t_var = split(params_split[i], ' ');
+    Parametro p = Parametro(definicao_t_var[0], Tipo(definicao_t_var[1]));
+    params.push_back(p);
+  }
+
+  SimboloFuncao prot = SimboloFuncao(nome, Tipo(tipo), params, true); // TODO implementar params
+
+  return codigo;
 }
 
 int main (int argc, char *argv[]){
