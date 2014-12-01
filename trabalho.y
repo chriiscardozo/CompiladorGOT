@@ -1048,7 +1048,7 @@ string gerarCodigoPrint(const Atributo &S){
   else if(S.t.nome == C_BOOL)
     codigo += "(\"%d\", " + S.v + ");\n";
 
-  return codigo;
+  return S.c + codigo;
 }
 
 string gerarLabel() {
