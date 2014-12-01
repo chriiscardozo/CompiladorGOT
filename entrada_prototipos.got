@@ -1,6 +1,7 @@
 When you play the game of thrones, you win or you die
 
 squire stark fibonacci(stark termo);
+squire martell teste(martell a);
 
 Its_known daenerys, aux, vetor[10] As Targaryen;
 
@@ -11,6 +12,8 @@ First_of_his_name()
 
     resultado = fibonacci(fibonacci(limite + 1 + 10 - 2)) / 2 * 2;
     maester_write(resultado);
+    maester_write("\n");
+    maester_write(teste(FIRE));
     maester_write("\n");
 
 and_now_his_watch_is_ended
@@ -28,3 +31,7 @@ winter_is_coming
 
     The_Lannister_Send_Their_Regards b;
 all_functions_must_die
+
+martell teste(martell a){
+    The_Lannister_Send_Their_Regards ICE;
+}

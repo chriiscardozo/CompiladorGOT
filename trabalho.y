@@ -236,9 +236,14 @@ CABECALHO_FUNCAO : TIPO TK_ID '(' LISTA_ARGUMENTOS ')' {
                     string t = $1.v;
                     if($1.v == C_BOOL)
                       t = C_INT;
+                    else if($1.v == C_STRING)
+                      t = C_CHAR "*";
 
                     $$ = Atributo();
                     $$.t = Tipo($1.v);
+
+                    replaceAll($4.c, "bool", "int");
+
                     $$.c = "\n" + t + " " + $2.v + "(" + $4.c + ")";
 
                     tipo_retorno_atual = $1.v;
@@ -274,8 +279,6 @@ ARGUMENTOS : TIPO TK_ID ARRAY ',' ARGUMENTOS {
               $$ = Atributo();
 
               string t = $1.v;
-              if($1.v == C_BOOL)
-                t = C_INT;
 
               $$.c = t + " " + $2.v + $3.c + ", " + $5.c;
 
@@ -289,8 +292,6 @@ ARGUMENTOS : TIPO TK_ID ARRAY ',' ARGUMENTOS {
               $$ = Atributo();
 
               string t = $1.v;
-              if($1.v == C_BOOL)
-                t = C_INT;
 
               $$.c = t + " " + $2.v + $3.c; 
 
@@ -1172,6 +1173,10 @@ string gerarCodigoPrototipo(string tipo, string nome, string listaParams){
   string tipo_verificado = tipo;
   if(tipo == C_BOOL)
     tipo_verificado = C_INT;
+  else if(tipo == C_STRING)
+    tipo_verificado = C_CHAR "*";
+
+  replaceAll(listaParams, "bool", "int");
 
   codigo = tipo_verificado + " " + nome + "(" + listaParams + ");";
 
@@ -1193,6 +1198,8 @@ void adicionarFuncaoImplementada(string tipo, string nome, string listaParams){
     SimboloFuncao &f = tabelaFuncoes[nome];
 
     if(f.prototipo){
+      replaceAll(listaParams, "bool", "int");
+
       if(f.codigo_params != listaParams)
         erro("A função " + f.nome + " não corresponde à lista de argumentos do protótipo declarado.");
 
@@ -1203,6 +1210,8 @@ void adicionarFuncaoImplementada(string tipo, string nome, string listaParams){
   }
   else{
     vector<string> params_split = split(listaParams, ',');
+
+    replaceAll(listaParams, "bool", "int");
 
     SimboloFuncao f = SimboloFuncao(nome, Tipo(tipo), converteParaVectorArgumentos(params_split) ,listaParams);
     tabelaFuncoes[nome] = f;
