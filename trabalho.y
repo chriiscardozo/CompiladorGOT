@@ -1073,15 +1073,14 @@ string gerarCodigoIfElse(const Atributo &condicao, const Atributo &cod_if, const
 string gerarCodigoWhile(const Atributo &condicao, const Atributo &cod) {
     if (condicao.t.nome != C_BOOL)
         erro("Expressão não booleana."); // TODO fazer uma mensagem melhor
+    Atributo not_condicao;
+    gerarCodigoOperadorUnario(not_condicao, Atributo("!"), condicao);
     string codigo;
     string label_if  = gerarLabel();
-    string label_cod = gerarLabel();
     string label_end = gerarLabel();
     codigo = label_if + ":\n" +
-             condicao.c +
-             TAB "if (" + condicao.v + ") goto " + label_cod + ";\n" +
-             TAB "goto " + label_end + ";\n" +
-             label_cod + ":\n" +
+             not_condicao.c +
+             TAB "if (" + not_condicao.v + ") goto " + label_end + ";\n" +
              cod.c +
              TAB "goto " + label_if + ";\n" +
              label_end + ":\n";
@@ -1107,16 +1106,15 @@ string gerarCodigoDoWhile(const Atributo &condicao, const Atributo &cod) {
 string gerarCodigoFor(const Atributo &init, const Atributo &condicao, const Atributo &upd, const Atributo &cod) {
     if (condicao.t.nome != C_BOOL)
         erro("Expressão não booleana."); // TODO fazer uma mensagem melhor
+    Atributo not_condicao;
+    gerarCodigoOperadorUnario(not_condicao, Atributo("!"), condicao);
     string codigo;
     string label_if  = gerarLabel();
-    string label_cod = gerarLabel();
     string label_end = gerarLabel();
     codigo = init.c +
              label_if + ":\n" +
-             condicao.c +
-             TAB "if (" + condicao.v + ") goto " + label_cod + ";\n" +
-             TAB "goto " + label_end + ";\n" +
-             label_cod + ":\n" +
+             not_condicao.c +
+             TAB "if (" + not_condicao.v + ") goto " + label_end + ";\n" +
              cod.c +
              upd.c +
              TAB "goto " + label_if + ";\n" +
@@ -1156,7 +1154,7 @@ string gerarCodigoSwitch(const Atributo &expr, const Atributo &cod) {
     return condicoes + blocos;
 }
 
-bool funcaoDeclarada(string nome){
+bool funcaoDeclarada(string nome) {
     return tabelaFuncoes.find(nome) != tabelaFuncoes.end();
 }
 
