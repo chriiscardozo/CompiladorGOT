@@ -236,8 +236,6 @@ CABECALHO_FUNCAO : TIPO TK_ID '(' LISTA_ARGUMENTOS ')' {
                     string t = $1.v;
                     if($1.v == C_BOOL)
                       t = C_INT;
-                    else if($1.v == C_STRING)
-                      t = C_CHAR "*";
 
                     $$ = Atributo();
                     $$.t = Tipo($1.v);
@@ -1173,8 +1171,6 @@ string gerarCodigoPrototipo(string tipo, string nome, string listaParams){
   string tipo_verificado = tipo;
   if(tipo == C_BOOL)
     tipo_verificado = C_INT;
-  else if(tipo == C_STRING)
-    tipo_verificado = C_CHAR "*";
 
   replaceAll(listaParams, "bool", "int");
 
