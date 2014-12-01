@@ -27,7 +27,6 @@ TIPO_VOID           "unsullied"
 
 ATRIBUICAO          "="
 
-
 PRINCIPAL_FUNCAO    "first_of_his_name()"
 COMECA_BLOCO        "{"
 TERMINA_BLOCO       "}"
@@ -51,6 +50,10 @@ RETURN              "the_lannister_send_their_regards"
 SCAN                "maester_read"
 PRINT               "maester_write"
 
+INTERVALO           "intervalo"
+FILTER              "filter"
+FOREACH             "foreach"
+
 OR                  "||"
 AND                 "&&"
 NOT                 "!"
@@ -67,6 +70,8 @@ SUBTRACAO           "-"
 MULTIPLICACAO       "*"
 DIVISAO             "/"
 MODULO              "%"
+
+PIPE                "=>"
 
 PROTOTIPO           "squire"
 
@@ -124,6 +129,9 @@ BIB_INCLUDE         (("<")({LETRA})*(".h")?(">")|(\")({LETRA})*(".h")?(\"))
 {SCAN}              { yylval = Atributo(yytext); return TK_SCAN; }
 {PRINT}             { yylval = Atributo(yytext); return TK_PRINT; }
 
+{INTERVALO}         { yylval = Atributo(yytext); return TK_INTERVALO; }
+{FILTER}            { yylval = Atributo(yytext); return TK_FILTER; }
+{FOREACH}           { yylval = Atributo(yytext); return TK_FOREACH; }
 
 {OR}                { yylval = Atributo(yytext); return TK_OR; }
 {AND}               { yylval = Atributo(yytext); return TK_AND; }
@@ -141,6 +149,8 @@ BIB_INCLUDE         (("<")({LETRA})*(".h")?(">")|(\")({LETRA})*(".h")?(\"))
 {MULTIPLICACAO}     { yylval = Atributo(yytext); return TK_MULTIPLICACAO; }
 {DIVISAO}           { yylval = Atributo(yytext); return TK_DIVISAO; }
 {MODULO}            { yylval = Atributo(yytext); return TK_MODULO; }
+
+{PIPE}              { yylval = Atributo(yytext); return TK_PIPE; }
 
 {PROTOTIPO}         { yylval = Atributo(yytext); return TK_PROTOTIPO; }
 

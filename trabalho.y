@@ -82,17 +82,22 @@ struct SimboloFuncao {
 
 #define MAX_STR     256
 
-#define MAX_CASES 1000
+#define MAX_CASES   1000
 
 void yyerror(const char*);
 void erro(string msg);
 int yylex();
 int yyparse();
 
+
 int id_bloco = 0;
 string codigoVarsProcedimento = "";
 int id_label = 0;
 string tipo_retorno_atual = "";
+
+int id_pipe = 0;
+vector<Atributo> pipeVars;
+vector<string> labelPassoPipes;
 
 typedef pair<Atributo, string> SCase;
 vector<SCase> listaSCases;
@@ -160,6 +165,7 @@ void verificarPrototiposDeclarados();
 %token TK_ADICAO TK_SUBTRACAO TK_MULTIPLICACAO TK_DIVISAO TK_MODULO
 %token TK_COMP_MENOR TK_COMP_MAIOR TK_COMP_MENOR_IGUAL TK_COMP_MAIOR_IGUAL TK_COMP_IGUAL TK_COMP_DIFF
 %token TK_OR TK_AND TK_NOT
+%token TK_PIPE TK_INTERVALO TK_FILTER TK_FOREACH
 %token TK_ATRIBUICAO
 %token TK_IF TK_ELSE TK_FOR TK_DO TK_WHILE TK_SWITCH TK_CASE TK_DEFAULT TK_BREAK
 %token TK_RETURN
@@ -351,10 +357,10 @@ COMANDO : EXPRESSAO ';'
         | COMANDO_SCAN ';'
         | COMANDO_PRINT ';'
         | COMANDO_BREAK ';'
+        | COMANDO_PIPE ';'
         | BLOCO
         | ';' { $$ = Atributo(); }
         ;
-
 
 CHAMADA_FUNCAO : TK_ID '(' LISTA_PARAMETROS ')' { 
                                                   $$ = Atributo();
@@ -438,9 +444,24 @@ EXPRESSAO : EXPRESSAO TK_ADICAO EXPRESSAO
 
 TERMINAL : TK_ID ARRAY
            {
-             $$ = buscaVariavel($1.v);
-             string posicaoAcesso = validarAcessoArray($1.v, $2.c); 
-             $$.v = $$.v + posicaoAcesso;
+                int isPipeVar = 0;
+                for (int i = 0; i < pipeVars.size(); i++) {
+                    string s = pipeVars[i].v;
+                    while (isdigit(s.back()))
+                        s.pop_back();
+                    if ($1.v + "_pipe_" == s) {
+                        if ($2.c != "")
+                            erro("Variável de pipe não é um array.");
+                        isPipeVar = 1;
+                        $$ = pipeVars[i];
+                        break;
+                    }
+                }
+                if (!isPipeVar) {
+                    $$ = buscaVariavel($1.v);
+                    string posicaoAcesso = validarAcessoArray($1.v, $2.c); 
+                    $$.v = $$.v + posicaoAcesso;
+                }
            }
          | TK_CTE_INT
            { $$ = Atributo($1.v, C_INT); }
@@ -521,8 +542,62 @@ COMANDO_SCAN : TK_SCAN '(' TK_ID ARRAY ')'
                }
              ;
 
-COMANDO_PRINT : TK_PRINT '(' EXPRESSAO ')' { $$.c = gerarCodigoPrint($3); }
+COMANDO_PRINT : TK_PRINT '(' EXPRESSAO ')'
+                { $$.c = gerarCodigoPrint($3); }
               ;
+
+COMANDO_PIPE : TK_INTERVALO '[' EXPRESSAO ':' EXPRESSAO ']' '(' INIT_PIPE ')' PROCS CONSOME
+               {
+                    if ($3.t.nome != C_INT || $5.t.nome != C_INT)
+                        erro("Intervalo com limites não inteiros.");
+
+                    Atributo init, condicao, upd, cmds;
+                    Atributo var = pipeVars.back();
+                    string label = labelPassoPipes.back();
+
+                    init.c = $3.c + $5.c +
+                             TAB + var.v + " = " + $3.v + ";\n";
+                    gerarCodigoOperadorBinario(condicao, var, Atributo("<="), Atributo($5.v, $5.t));
+                    upd.t = Tipo(C_INT);
+                    upd.v = var.v;
+                    upd.c = label + ":\n" +
+                            TAB + var.v + " = " + var.v + " + 1;\n";
+                    cmds.c = $10.c + $11.c;
+
+                    $$.c = gerarCodigoFor(init, condicao, upd, cmds);
+
+                    pipeVars.pop_back();
+                    labelPassoPipes.pop_back();
+               }
+             ;
+
+INIT_PIPE : TK_ID
+            {
+                Atributo var = Atributo($1.v + "_pipe_" + toStr(id_pipe++), C_INT);
+                pipeVars.push_back(var);
+                labelPassoPipes.push_back(gerarLabel());
+                adicionarVariaveisProcedimento(TAB C_INT " " + var.v + ";\n");
+            }
+          ;
+
+PROCS : TK_PIPE PROC PROCS
+        { $$.c = $2.c + $3.c; }
+      | TK_PIPE
+        { $$ = Atributo(); }
+      ;
+
+PROC : TK_FILTER '[' EXPRESSAO ']'
+       {
+            if ($3.t.nome != C_BOOL)
+                erro("Expressão não booleana.");
+            gerarCodigoOperadorUnario($$, Atributo("!"), $3);
+            $$.c += TAB "if (" + $$.v + ") goto " + labelPassoPipes.back() + ";\n";
+       }
+     ;
+
+CONSOME : TK_FOREACH '[' COMANDO ']'
+          { $$.c = $3.c; }
+        ;
 
 %%
 
