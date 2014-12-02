@@ -2,4 +2,12 @@
 - passagem por referencia (deixar para o final!) A.K.A não fazer :p
 - switch-case (nao funciona switch dentro de switch)
 - break (falta verificar se o break e' valido)
-- pipes! (5 pontos)
+- pipes! (5 pontos) (iremos criar nomes legais? :P)
+    - intervalo     ok
+    - filter        ok
+    - foreach       ok
+    - firstN
+    - lastN
+    - sort
+    - split
+    - merge
