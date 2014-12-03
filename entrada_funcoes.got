@@ -6,9 +6,10 @@ squire stark powmod(stark a, stark e, stark n);
 First_of_his_name()
     Its_known limite, resultado As Stark;
 
-    limite = 0 - 1;
+    maester_write(fibonacci(3));
+    maester_write("\n");
 
-    resultado = fibonacci(fibonacci(limite + 1 + 10 - 2)) / 2 * 2;
+    resultado = fibonacci(fibonacci(6)) / 2 * 2;
     maester_write(resultado);
     maester_write("\n");
 
@@ -35,6 +36,7 @@ all_functions_must_die
 stark powmod(stark a, stark e, stark n)
 winter_is_coming
     Its_known ret as stark;
+    ret = 1;
 
     while_the_proud_lord_says (e > 0) {
         what_do_we_say_to_death (e % 2 == 1) {
@@ -43,5 +45,7 @@ winter_is_coming
         e = e / 2;
         a = a * a % n;
     }
+
+    The_Lannister_Send_Their_Regards ret;
 
 all_functions_must_die

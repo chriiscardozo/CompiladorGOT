@@ -181,19 +181,19 @@ void verificarPrototiposDeclarados();
 
 %%
 
-S : TK_INICIO INCLUDES PROT VARS_GLOBAIS FUNCOES MAIN FUNCOES	
+S : TK_INICIO INCLUDES VARS_GLOBAIS PROT FUNCOES MAIN FUNCOES	
       { 
         verificarPrototiposDeclarados();
-        cout << "// *****Welcome to the Game Of Thrones*****\n\n\n"
-        << $2.c << "#include <stdio.h>\n"
-                   "#include <stdlib.h>\n"
-                   "#include <string.h>\n"
-        << "\n"
-        << $3.c // prototipos
-        << $4.c // vars_globais
-        << $5.c + $7.c // funcoes
-        << $6.c // main
-        << endl;
+        //cout << "// *****Welcome to the Game Of Thrones*****\n\n\n";
+        cout << $2.c << "#include <stdio.h>\n"
+                        "#include <stdlib.h>\n"
+                        "#include <string.h>\n"
+             << "\n"
+             << $3.c        // vars_globais
+             << $4.c        // prototipos
+             << $5.c + $7.c // funcoes
+             << $6.c        // main
+             << endl;
       }
   ;
 
@@ -279,68 +279,67 @@ LISTA_ARGUMENTOS : ARGUMENTOS { $$ = Atributo(); $$.c = $1.c; }
                  | { $$ = Atributo(); }
                  ;
 
-ARGUMENTOS : TIPO TK_ID ARRAY ',' ARGUMENTOS {
-              $$ = Atributo();
+ARGUMENTOS : TIPO TK_ID ARRAY ',' ARGUMENTOS
+             {
+                $$ = Atributo();
+                $$.c = $1.v + " " + $2.v + $3.c + ", " + $5.c;
 
-              string t = $1.v;
-
-              $$.c = t + " " + $2.v + $3.c + ", " + $5.c;
-
-              if(tabelaVariaveisArgumentos.count($2.v) > 0)
-                erro("Argumento com mesmo nome já foi declarado.");
-              else
-                tabelaVariaveisArgumentos[$2.v] = SimboloVariavel($2.v, $1.v, -1);
-
+                if (tabelaVariaveisArgumentos.count($2.v) > 0)
+                    erro("Argumento com mesmo nome já foi declarado.");
+                else
+                    tabelaVariaveisArgumentos[$2.v] = SimboloVariavel($2.v, $1.v, -1);
              }
-           | TIPO TK_ID ARRAY {
-              $$ = Atributo();
+           | TIPO TK_ID ARRAY
+             {
+                $$ = Atributo();
+                $$.c = $1.v + " " + $2.v + $3.c;
 
-              string t = $1.v;
-
-              $$.c = t + " " + $2.v + $3.c; 
-
-              if(tabelaVariaveisArgumentos.count($2.v) > 0)
-                erro("Argumento com mesmo nome já foi declarado.");
-              else
-                tabelaVariaveisArgumentos[$2.v] = SimboloVariavel($2.v, $1.v, -1);
-
+                if (tabelaVariaveisArgumentos.count($2.v) > 0)
+                    erro("Argumento com mesmo nome já foi declarado.");
+                else
+                    tabelaVariaveisArgumentos[$2.v] = SimboloVariavel($2.v, $1.v, -1);
              }
            ;
 
-VARS_GLOBAIS : TABELA_VARS VAR_GLOBAL VARS_GLOBAIS { $$ = Atributo();  $$.c = $1.c + $2.c; }
+VARS_GLOBAIS : TABELA_VARS VAR_GLOBAL VARS_GLOBAIS { $$.c = $1.c + $2.c; }
              | { $$ = Atributo(); }
              ;
 
 TABELA_VARS : { adicionarNovaTabelaVariaveis(); }
             ;
 
-VAR_GLOBAL : TK_DECLARAR_VAR LISTA_IDS TK_AS TIPO ';' { $$ = Atributo(); $$.c = declararVariavel($4.v, $2.c, 0) + ";\n"; }
+VAR_GLOBAL : TK_DECLARAR_VAR LISTA_IDS TK_AS TIPO ';'
+             { $$.c = declararVariavel($4.v, $2.c, 0) + ";\n"; }
            ;
 
-LISTA_IDS : TK_ID ARRAY ',' LISTA_IDS { $$ = Atributo(); $$.c = $1.v + $2.c + "," + $4.c; } // FALTA ARRAY
-          | TK_ID ARRAY { $$ = Atributo(); $$.c = $1.v + $2.c; }
+LISTA_IDS : TK_ID ARRAY ',' LISTA_IDS
+            { $$ = Atributo(); $$.c = $1.v + $2.c + "," + $4.c; }
+          | TK_ID ARRAY
+            { $$ = Atributo(); $$.c = $1.v + $2.c; }
           ;
 
-ARRAY : '[' TK_CTE_INT ']' ARRAY { $$ = Atributo(); $$.c = "[" + $2.v + "]" + $4.c; }
+ARRAY : '[' TK_CTE_INT ']' ARRAY { $$.c = "[" + $2.v + "]" + $4.c; }
       | { $$ = Atributo(); }
       ;
 
-BLOCO : COMECA_BLOCO CORPO TK_TERMINA_BLOCO      { $$.c = $2.c; removerBlocoVars(); }
-      | COMECA_BLOCO CORPO TK_TERMINA_FUNCAO   	 { $$.c = $2.c; removerBlocoVars(); }
+BLOCO : COMECA_BLOCO CORPO TK_TERMINA_BLOCO     { $$.c = $2.c; removerBlocoVars(); }
+      | COMECA_BLOCO CORPO TK_TERMINA_FUNCAO    { $$.c = $2.c; removerBlocoVars(); }
       ;
 
 COMECA_BLOCO : TABELA_VARS TK_COMECA_BLOCO  { }
              | TABELA_VARS TK_COMECA_FUNCAO { }
              ;
 
-CORPO : VARS_LOCAIS COMANDOS { adicionarVariaveisProcedimento($1.c); $$.c = $2.c; }
+CORPO : VARS_LOCAIS COMANDOS
+        { $$.c = $2.c; adicionarVariaveisProcedimento($1.c); }
       ;
 
-VARS_LOCAIS : VAR_LOCAL VARS_LOCAIS  { $$ = Atributo(); $$.c = $1.c + $2.c; }
+VARS_LOCAIS : VAR_LOCAL VARS_LOCAIS { $$.c = $1.c + $2.c; }
             | { $$ = Atributo(); }
             ;
 
-VAR_LOCAL : TK_DECLARAR_VAR LISTA_IDS TK_AS TIPO ';' { $$ = Atributo(); $$.c = declararVariavel($4.v, $2.c, id_bloco) + ";\n"; }
+VAR_LOCAL : TK_DECLARAR_VAR LISTA_IDS TK_AS TIPO ';'
+            { $$.c = declararVariavel($4.v, $2.c, id_bloco) + ";\n"; }
           ;
 
 COMANDOS : COMANDO COMANDOS { $$.c = $1.c + $2.c; }
@@ -427,13 +426,8 @@ EXPRESSAO : EXPRESSAO TK_ADICAO EXPRESSAO
             { gerarCodigoOperadorBinario($$, $1, $2, $3); }
           | TK_NOT EXPRESSAO
             { gerarCodigoOperadorUnario($$, $1, $2); }
-          | TK_ID ARRAY TK_ATRIBUICAO EXPRESSAO
-            { 
-              Atributo A = buscaVariavel($1.v);
-              string posicaoAcesso = validarAcessoArray($1.v, $2.c); 
-              A.v = A.v + posicaoAcesso;
-              gerarCodigoOperadorBinario($$, A, $3, $4);
-            }
+          | VAR TK_ATRIBUICAO EXPRESSAO
+            { gerarCodigoOperadorBinario($$, $1, $2, $3); } // FALTA TRATAR ARRAY
           | CHAMADA_FUNCAO
             { $$ = $1; }
           | '(' EXPRESSAO ')'
@@ -442,27 +436,8 @@ EXPRESSAO : EXPRESSAO TK_ADICAO EXPRESSAO
             { $$ = $1; }
           ;
 
-TERMINAL : TK_ID ARRAY
-           {
-                int isPipeVar = 0;
-                for (int i = 0; i < pipeVars.size(); i++) {
-                    string s = pipeVars[i].v;
-                    while (isdigit(s.back()))
-                        s.pop_back();
-                    if ($1.v + "_pipe_" == s) {
-                        if ($2.c != "")
-                            erro("Variável de pipe não é um array.");
-                        isPipeVar = 1;
-                        $$ = pipeVars[i];
-                        break;
-                    }
-                }
-                if (!isPipeVar) {
-                    $$ = buscaVariavel($1.v);
-                    string posicaoAcesso = validarAcessoArray($1.v, $2.c); 
-                    $$.v = $$.v + posicaoAcesso;
-                }
-           }
+TERMINAL : VAR
+           { $$ = $1; }
          | TK_CTE_INT
            { $$ = Atributo($1.v, C_INT); }
          | TK_CTE_DOUBLE
@@ -480,6 +455,33 @@ TERMINAL : TK_ID ARRAY
          | TK_NULL
            { $$ = Atributo("0", C_INT); }
          ;
+
+VAR : TK_ID ARRAY
+      {
+        int isPipeVar = 0;
+        for (int i = 0; i < pipeVars.size(); i++) {
+            string s = pipeVars[i].v;
+            while (isdigit(s.back()))
+                s.pop_back();
+            if ($1.v + "_pipe_" == s) {
+                if ($2.c != "")
+                    erro("Variável de pipe não é um array.");
+                isPipeVar = 1;
+                $$ = pipeVars[i];
+                break;
+            }
+        }
+        if (!isPipeVar) {
+            $$ = buscaVariavel($1.v);
+            string posicaoAcesso = validarAcessoArray($1.v, $2.c);
+            if (posicaoAcesso != "") {
+                string temp = gerarVarTemp($$.t);
+                $$.c = TAB + temp + " = " + $$.v + posicaoAcesso + ";\n";
+                $$.v = temp;
+            }
+        }
+      }
+    ;
 
 COMANDO_IF : TK_IF '(' EXPRESSAO ')' BLOCO
              { $$.c = gerarCodigoIfElse($3, $5, Atributo()); }
@@ -534,12 +536,8 @@ COMANDO_RETURN : TK_RETURN EXPRESSAO { $$ = Atributo(); $$.c = gerarCodigoReturn
                 }
                ;
 
-COMANDO_SCAN : TK_SCAN '(' TK_ID ARRAY ')'
-               {
-                Atributo a = buscaVariavel($3.v);
-                a.v += validarAcessoArray($3.v, $4.c);
-                $$.c = gerarCodigoScan(a);
-               }
+COMANDO_SCAN : TK_SCAN '(' TK_ID ')'
+               { $$.c = gerarCodigoScan(buscaVariavel($3.v)); }
              ;
 
 COMANDO_PRINT : TK_PRINT '(' EXPRESSAO ')'
@@ -560,7 +558,7 @@ COMANDO_PIPE : TK_INTERVALO '[' EXPRESSAO ':' EXPRESSAO ']' '(' INIT_PIPE ')' PR
                     gerarCodigoOperadorBinario(condicao, var, Atributo("<="), Atributo($5.v, $5.t));
                     upd.t = Tipo(C_INT);
                     upd.v = var.v;
-                    upd.c = label + ":\n" +
+                    upd.c = label + ":;\n" +
                             TAB + var.v + " = " + var.v + " + 1;\n";
                     cmds.c = $10.c + $11.c;
 
@@ -1067,7 +1065,9 @@ void gerarCodigoOperadorBinario(Atributo &SS, const Atributo &S1, const Atributo
                 SS.c += TAB "sprintf(" + SS.v + ", \"%c%s\", " + S1.v + ", " +  endereco2 + S3.v + ");\n";
         }
         else if (SS.t.nome == C_BOOL && S1.t.nome == C_STRING) { // comparacao de strings
-            SS.c += TAB + SS.v + " = strcmp(" + S1.v + ", " + S3.v + ") " + S2.v + " 0;\n";
+            string temp = gerarVarTemp(Tipo(C_INT));
+            SS.c += TAB + temp + " = strcmp(" + S1.v + ", " + S3.v + ");\n" +
+                    TAB + SS.v + " = " + temp + " " + S2.v + " 0;\n";
         }
         else {
             SS.c += TAB + SS.v + " = " + S1.v + " " + S2.v + " " + S3.v + ";\n";
@@ -1139,9 +1139,9 @@ string gerarCodigoIfElse(const Atributo &condicao, const Atributo &cod_if, const
              TAB "if (" + condicao.v + ") goto " + label_if + ";\n" +
              cod_else.c +
              TAB "goto " + label_end + ";\n" +
-             label_if + ":\n" +
+             label_if + ":;\n" +
              cod_if.c +
-             label_end + ":\n";
+             label_end + ":;\n";
     return codigo;
 }
 
@@ -1153,12 +1153,12 @@ string gerarCodigoWhile(const Atributo &condicao, const Atributo &cod) {
     string codigo;
     string label_if  = gerarLabel();
     string label_end = gerarLabel();
-    codigo = label_if + ":\n" +
+    codigo = label_if + ":;\n" +
              not_condicao.c +
              TAB "if (" + not_condicao.v + ") goto " + label_end + ";\n" +
              cod.c +
              TAB "goto " + label_if + ";\n" +
-             label_end + ":\n";
+             label_end + ":;\n";
     replaceAll(codigo, C_TK_BREAK, "goto " + label_end);
     return codigo;
 }
@@ -1169,11 +1169,11 @@ string gerarCodigoDoWhile(const Atributo &condicao, const Atributo &cod) {
     string codigo;
     string label_cod = gerarLabel();
     string label_end = gerarLabel();
-    codigo = label_cod + ":\n" +
+    codigo = label_cod + ":;\n" +
              cod.c +
              condicao.c +
              TAB "if (" + condicao.v + ") goto " + label_cod + ";\n" +
-             label_end + ":\n";
+             label_end + ":;\n";
     replaceAll(codigo, C_TK_BREAK, "goto " + label_end);
     return codigo;
 }
@@ -1187,13 +1187,13 @@ string gerarCodigoFor(const Atributo &init, const Atributo &condicao, const Atri
     string label_if  = gerarLabel();
     string label_end = gerarLabel();
     codigo = init.c +
-             label_if + ":\n" +
+             label_if + ":;\n" +
              not_condicao.c +
              TAB "if (" + not_condicao.v + ") goto " + label_end + ";\n" +
              cod.c +
              upd.c +
              TAB "goto " + label_if + ";\n" +
-             label_end + ":\n";
+             label_end + ":;\n";
     replaceAll(codigo, C_TK_BREAK, "goto " + label_end);
     return codigo;
 }
@@ -1209,19 +1209,19 @@ string gerarCodigoSwitch(const Atributo &expr, const Atributo &cod) {
             gerarCodigoOperadorBinario(a, expr, Atributo("=="), c.first);
             condicoes += a.c +
                          TAB "if (" + a.v + ") goto " + label + ";\n";
-            blocos += label + ":\n" +
+            blocos += label + ":;\n" +
                       c.second;
         }
         else {
             condicoes += TAB "goto " + label + ";\n";
-            blocos += label + ":\n" +
+            blocos += label + ":;\n" +
                       c.second;
         }
     }
 
     string label_end = gerarLabel();
     condicoes += TAB "goto " + label_end + ";\n";
-    blocos += label_end + ":\n";
+    blocos += label_end + ":;\n";
 
     replaceAll(blocos, C_TK_BREAK, "goto " + label_end);
 
