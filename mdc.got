@@ -1,0 +1,35 @@
+When you play the game of thrones, you win or you die
+
+stark mdc(stark a, stark b)
+winter_is_coming
+
+    what_do_we_say_to_death (b == 0) {
+        the_lannister_send_their_regards a;
+    }
+
+    the_lannister_send_their_regards mdc(b, a % b);
+
+all_functions_must_die
+
+First_of_his_name()
+    its_known a, b as stark;
+
+    while_the_proud_lord_says (FIRE) {
+        maester_write("Entre com dois inteiros: ");
+        maester_read(a);
+        maester_read(b);
+
+        what_do_we_say_to_death (a == 0 && b == 0) {
+            breaker_of_chains;
+        }
+
+        maester_write("mdc(");
+        maester_write(a);
+        maester_write(", ");
+        maester_write(b);
+        maester_write(") = ");
+        maester_write(mdc(a, b));
+        maester_write("\n");
+    }
+
+and_now_his_watch_is_ended
