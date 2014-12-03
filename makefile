@@ -8,7 +8,7 @@ all: trabalho entrada.got
 	./trabalho < entrada_prototipos.got > saida.c
 	#./trabalho < entrada_funcoes.got > saida.c
 	#./trabalho < entrada_fluxos.got > saida.c
-	#./trabalho < entrada_expressao.got > saida.c
+	#./trabalho < entrada_expressoes.got > saida.c
 	#./trabalho < entrada_pipes.got > saida.c
 	cat saida.c
 
@@ -24,18 +24,23 @@ trabalho: lex.yy.c y.tab.c
 e_prototipos:	entrada_prototipos.got
 e_funcoes:	entrada_funcoes.got
 e_fluxos:	entrada_fluxos.got
-e_expressoes:	entrada_expressao.got
+e_expressoes:	entrada_expressoes.got
 e_pipes:	entrada_pipes.got
-entradas: e_prototipos e_funcoes e_fluxos e_expressoes e_pipes
+entradas:	e_prototipos e_funcoes e_fluxos e_expressoes e_pipes
 
 test: trabalho entradas
 	./trabalho < entrada_prototipos.got > saida.c
+	./../gabarito/trabalho < saida.c
 	gcc saida.c
 	./trabalho < entrada_funcoes.got > saida.c
+	./../gabarito/trabalho < saida.c
 	gcc saida.c
 	./trabalho < entrada_fluxos.got > saida.c
+	./../gabarito/trabalho < saida.c
 	gcc saida.c
-	./trabalho < entrada_expressao.got > saida.c
+	./trabalho < entrada_expressoes.got > saida.c
+	./../gabarito/trabalho < saida.c
 	gcc saida.c
 	./trabalho < entrada_pipes.got > saida.c
+	./../gabarito/trabalho < saida.c
 	gcc saida.c
