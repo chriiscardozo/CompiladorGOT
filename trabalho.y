@@ -589,6 +589,41 @@ COMANDO_PIPE : TK_INTERVALO '[' EXPRESSAO ':' EXPRESSAO ']' '(' INIT_PIPE ')' PR
                     pipeVars.pop_back();
                     labelPassoPipes.pop_back();
                }
+             | TK_INTERVALO '(' TK_ID ')' '[' EXPRESSAO ':' EXPRESSAO ']' '(' INIT_PIPE ')' PROCS CONSOME
+               {
+                    if ($6.t.nome != C_INT || $8.t.nome != C_INT)
+                        erro("Intervalo com limites não inteiros.");
+
+                    Atributo array_var = buscaVariavel($3.v);
+                    if (array_var.t.ndim != 1)
+                        erro("Variável " + $3.v + " não é um array unidimensional");
+                    if (array_var.t.nome != C_INT)
+                        erro("Variável " + $3.v + " não é do tipo int");
+
+                    Atributo init, condicao, upd, cmds, it, temp;
+                    Atributo var = pipeVars.back();
+                    string label = labelPassoPipes.back();
+
+                    it = Atributo(gerarVarTemp(Tipo(C_INT)), C_INT);
+                    init.c = $6.c + $8.c +
+                             TAB + it.v + " = " + $6.v + ";\n";
+
+                    gerarCodigoOperadorBinario(condicao, it, Atributo("<="), Atributo($8.v, $8.t));
+
+                    upd.t = Tipo(C_INT);
+                    upd.v = it.v;
+                    upd.c = label + ":;\n" +
+                            TAB + it.v + " = " + it.v + " + 1;\n";
+
+                    array_var.v += "[" + it.v + "]";
+                    gerarCodigoOperadorBinario(cmds, var, Atributo("="), array_var);
+                    cmds.c += $13.c + $14.c;
+
+                    $$.c = gerarCodigoFor(init, condicao, upd, cmds);
+
+                    pipeVars.pop_back();
+                    labelPassoPipes.pop_back();
+               }
              ;
 
 INIT_PIPE : TK_ID
