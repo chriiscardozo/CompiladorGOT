@@ -182,23 +182,23 @@ void verificarPrototiposDeclarados();
 %%
 
 S : TK_INICIO INCLUDES VARS_GLOBAIS PROT FUNCOES MAIN FUNCOES	
-      { 
+    { 
         verificarPrototiposDeclarados();
         //cout << "// *****Welcome to the Game Of Thrones*****\n\n\n";
         cout << $2.c << "#include <stdio.h>\n"
                         "#include <stdlib.h>\n"
                         "#include <string.h>\n"
-             << "\n"
-             << $3.c        // vars_globais
-             << $4.c        // prototipos
-             << $5.c + $7.c // funcoes
-             << $6.c        // main
-             << endl;
-      }
+            << "\n"
+            << $3.c        // vars_globais
+            << $4.c        // prototipos
+            << $5.c + $7.c // funcoes
+            << $6.c        // main
+            << endl;
+    }
   ;
 
 MAIN : COMECA_MAIN CORPO TK_TERMINA_MAIN
-        {
+       {
             $$ = Atributo();
             $$.c = "\n"
                    "int main() {\n" +
@@ -211,7 +211,7 @@ MAIN : COMECA_MAIN CORPO TK_TERMINA_MAIN
             resetVarsTemp();
             removerBlocoVars();
             resetVariaveisProcedimento();
-        }
+       }
      ;
 
 COMECA_MAIN : TABELA_VARS TK_MAIN { tipo_retorno_atual = C_INT; }
@@ -222,48 +222,55 @@ FUNCOES : FUNCAO FUNCOES { $$.c = $1.c + $2.c; }
         ;
 
 FUNCAO : CABECALHO_FUNCAO BLOCO
-        {
+         {
             $$ = Atributo();
             $$.t = $1.t;
             $$.c = $1.c + "{\n" +
                    gerarCodigoVarsTemp() +
-                   codigoVarsProcedimento + '\n' +
+                   codigoVarsProcedimento + "\n" +
                    $2.c +
                    "}\n";
 
             resetVarsTemp();
             resetVariaveisProcedimento();
-        }
+         }
        ;
 
-CABECALHO_FUNCAO : TIPO TK_ID '(' LISTA_ARGUMENTOS ')' { 
-                    adicionarFuncaoImplementada($1.v, $2.v, $4.c);
+CABECALHO_FUNCAO : TIPO TK_ID '(' LISTA_ARGUMENTOS ')'
+                   {
+                        adicionarFuncaoImplementada($1.v, $2.v, $4.c);
 
-                    string t = $1.v;
-                    if($1.v == C_BOOL)
-                      t = C_INT;
+                        string t = $1.v;
+                        if ($1.v == C_BOOL)
+                            t = C_INT;
 
-                    $$ = Atributo();
-                    $$.t = Tipo($1.v);
+                        replaceAll($4.c, "bool", "int");
 
-                    replaceAll($4.c, "bool", "int");
+                        $$ = Atributo();
+                        $$.t = Tipo($1.v);
+                        $$.c = "\n" +
+                               t + " " + $2.v + "(" + $4.c + ")";
 
-                    $$.c = "\n" + t + " " + $2.v + "(" + $4.c + ")";
-
-                    tipo_retorno_atual = $1.v;
-                 }
+                        tipo_retorno_atual = $1.v;
+                   }
                  ;
 
-INCLUDES : TK_INCLUDE TK_BIB_INCLUDE INCLUDES { $$ = Atributo(); $$.c = gerarIncludeC($2.v) + $3.c; }
+INCLUDES : TK_INCLUDE TK_BIB_INCLUDE INCLUDES
+           { $$.c = gerarIncludeC($2.v) + $3.c; }
          | { $$ = Atributo(); }
          ;
 
-PROT : TK_PROTOTIPO TIPO TK_ID '(' LISTA_ARGUMENTOS ')' ';' PROT {
-         $$ = Atributo();
-         $$.c = gerarCodigoPrototipo($2.v, $3.v, $5.c) + "\n" + $8.c;
-         tabelaVariaveisArgumentos.clear();
+PROT : TK_PROTOTIPO TIPO TK_ID '(' LISTA_ARGUMENTOS ')' ';' PROT
+       {
+            $$ = Atributo();
+            $$.c = gerarCodigoPrototipo($2.v, $3.v, $5.c) + "\n" + $8.c;
+            tabelaVariaveisArgumentos.clear();
        }
-     | { $$ = Atributo(); tabelaVariaveisArgumentos.clear(); }
+     |
+       {
+            $$ = Atributo();
+            tabelaVariaveisArgumentos.clear();
+       }
      ;
 
 TIPO : TK_INT     { $$ = Atributo(C_INT);     }
@@ -275,7 +282,7 @@ TIPO : TK_INT     { $$ = Atributo(C_INT);     }
      | TK_VOID    { $$ = Atributo(C_VOID);    }
      ;
 
-LISTA_ARGUMENTOS : ARGUMENTOS { $$ = Atributo(); $$.c = $1.c; }
+LISTA_ARGUMENTOS : ARGUMENTOS { $$ = $1; }
                  | { $$ = Atributo(); }
                  ;
 
@@ -313,9 +320,9 @@ VAR_GLOBAL : TK_DECLARAR_VAR LISTA_IDS TK_AS TIPO ';'
            ;
 
 LISTA_IDS : TK_ID ARRAY ',' LISTA_IDS
-            { $$ = Atributo(); $$.c = $1.v + $2.c + "," + $4.c; }
+            { $$.c = $1.v + $2.c + "," + $4.c; }
           | TK_ID ARRAY
-            { $$ = Atributo(); $$.c = $1.v + $2.c; }
+            { $$.c = $1.v + $2.c; }
           ;
 
 ARRAY : '[' TK_CTE_INT ']' ARRAY { $$.c = "[" + $2.v + "]" + $4.c; }
@@ -331,7 +338,10 @@ COMECA_BLOCO : TABELA_VARS TK_COMECA_BLOCO  { }
              ;
 
 CORPO : VARS_LOCAIS COMANDOS
-        { $$.c = $2.c; adicionarVariaveisProcedimento($1.c); }
+        {
+            $$.c = $2.c;
+            adicionarVariaveisProcedimento($1.c);
+        }
       ;
 
 VARS_LOCAIS : VAR_LOCAL VARS_LOCAIS { $$.c = $1.c + $2.c; }
@@ -361,41 +371,42 @@ COMANDO : EXPRESSAO ';'
         | ';' { $$ = Atributo(); }
         ;
 
-CHAMADA_FUNCAO : TK_ID '(' LISTA_PARAMETROS ')' { 
-                                                  $$ = Atributo();
+CHAMADA_FUNCAO : TK_ID '(' LISTA_PARAMETROS ')'
+               {
+                    $$ = Atributo();
 
-                                                  // $3.v => tipo var, tipo var, etc.
-                                                  string lista = verificarTiposChamadaFuncao($1.v, $3.v);
-                                                  $$.t = Tipo(tabelaFuncoes[$1.v].retorno.nome);
-                                                  $$.v = gerarVarTemp($$.t);
-                                                  $$.c = $3.c + TAB + $$.v + " = " + $1.v + "(" + lista + ");\n";
-
-                                                }
+                    // $3.v => tipo var, tipo var, etc.
+                    string lista = verificarTiposChamadaFuncao($1.v, $3.v);
+                    $$.t = Tipo(tabelaFuncoes[$1.v].retorno.nome);
+                    $$.v = gerarVarTemp($$.t);
+                    $$.c = $3.c +
+                           TAB + $$.v + " = " + $1.v + "(" + lista + ");\n";
+               }
                ;
 
-LISTA_PARAMETROS : PARAMETROS { $$ = Atributo(); $$.c = $1.c; $$.v = $1.v; }
+LISTA_PARAMETROS : PARAMETROS { $$ = $1; }
                  | { $$ = Atributo(); }
                  ;
 
-PARAMETROS : EXPRESSAO ',' PARAMETROS {
-                                        $$ = Atributo();
-                                        string endereco = "";
+PARAMETROS : EXPRESSAO ',' PARAMETROS
+             {
+                $$ = Atributo();
+                string endereco = "";
 
-                                        if($1.t.nome == C_STRING && $1.t.ndim > 0)
-                                          endereco = "&";
+                if ($1.t.nome == C_STRING && $1.t.ndim > 0)
+                    endereco = "&";
 
-                                        $$.v = $1.t.nome + " " + $1.v + "," + $3.v;
-                                        $$.c = $1.c + $3.c;
+                $$.v = $1.t.nome + " " + $1.v + "," + $3.v;
+                $$.c = $1.c + $3.c;
+             }
+           | EXPRESSAO
+             {
+                string endereco = "";
+                if ($1.t.nome == C_STRING && $1.t.ndim > 0)
+                    endereco = "&";
 
-                                      }
-           | EXPRESSAO {
-                          string endereco = "";
-                          if($1.t.nome == C_STRING && $1.t.ndim > 0)
-                            endereco = "&";
-
-                          $$ = Atributo($1.t.nome + " " + $1.v, $1.t, $1.c);
-
-                       }
+                $$ = Atributo($1.t.nome + " " + $1.v, $1.t, $1.c);
+             }
            ;
 
 EXPRESSAO : EXPRESSAO TK_ADICAO EXPRESSAO
@@ -530,15 +541,17 @@ DEFAULT : TK_DEFAULT ':' CORPO
 COMANDO_BREAK : TK_BREAK { $$.c = TAB C_TK_BREAK ";\n"; }
               ;
 
-COMANDO_RETURN : TK_RETURN EXPRESSAO { $$ = Atributo(); $$.c = gerarCodigoReturn($2); }
-               | TK_RETURN {
-                  $$ = Atributo();
+COMANDO_RETURN : TK_RETURN EXPRESSAO
+                 { $$.c = gerarCodigoReturn($2); }
+               | TK_RETURN
+                 {
+                    $$ = Atributo();
 
-                  if(tipo_retorno_atual == C_VOID)
-                    $$.c = TAB "return ;\n";
-                  else
-                    erro("Tipo de retorno deve ser igual ao retorno da função.");
-                }
+                    if (tipo_retorno_atual == C_VOID)
+                        $$.c = TAB "return ;\n";
+                    else
+                        erro("Tipo de retorno deve ser igual ao retorno da função.");
+                 }
                ;
 
 COMANDO_SCAN : TK_SCAN '(' TK_ID ARRAY ')'
