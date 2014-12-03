@@ -5,10 +5,10 @@ endif
 
 all: trabalho entrada.got
 	#./trabalho < entrada.got > saida.c
-	#./trabalho < entrada_prototipos.got > saida.c
+	./trabalho < entrada_prototipos.got > saida.c
 	#./trabalho < entrada_funcoes.got > saida.c
 	#./trabalho < entrada_fluxos.got > saida.c
-	./trabalho < entrada_expressao.got > saida.c
+	#./trabalho < entrada_expressao.got > saida.c
 	#./trabalho < entrada_pipes.got > saida.c
 	cat saida.c
 
