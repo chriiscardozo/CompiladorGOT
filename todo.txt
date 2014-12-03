@@ -2,7 +2,6 @@
 - passagem por referencia (deixar para o final!) A.K.A não fazer :p
 - switch-case (nao funciona switch dentro de switch)
 - break (falta verificar se o break e' valido)
-- ajeitar atribuicao e scanf quando e' array
 - pipes! (5 pontos) (iremos criar nomes legais? :P)
     - intervalo     ok
     - filter        ok
@@ -11,4 +10,3 @@
     - lastN
     - sort
     - split
-    - merge

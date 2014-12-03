@@ -426,8 +426,13 @@ EXPRESSAO : EXPRESSAO TK_ADICAO EXPRESSAO
             { gerarCodigoOperadorBinario($$, $1, $2, $3); }
           | TK_NOT EXPRESSAO
             { gerarCodigoOperadorUnario($$, $1, $2); }
-          | VAR TK_ATRIBUICAO EXPRESSAO
-            { gerarCodigoOperadorBinario($$, $1, $2, $3); } // FALTA TRATAR ARRAY
+          | TK_ID ARRAY TK_ATRIBUICAO EXPRESSAO
+            {
+                Atributo var = buscaVariavel($1.v);
+                string posicaoAcesso = validarAcessoArray($1.v, $2.c);
+                var.v += posicaoAcesso;
+                gerarCodigoOperadorBinario($$, var, $3, $4);
+            }
           | CHAMADA_FUNCAO
             { $$ = $1; }
           | '(' EXPRESSAO ')'
@@ -536,8 +541,12 @@ COMANDO_RETURN : TK_RETURN EXPRESSAO { $$ = Atributo(); $$.c = gerarCodigoReturn
                 }
                ;
 
-COMANDO_SCAN : TK_SCAN '(' TK_ID ')'
-               { $$.c = gerarCodigoScan(buscaVariavel($3.v)); }
+COMANDO_SCAN : TK_SCAN '(' TK_ID ARRAY ')'
+               {
+                    Atributo var = buscaVariavel($3.v);
+                    var.v += validarAcessoArray($3.v, $4.c);
+                    $$.c = gerarCodigoScan(var);
+               }
              ;
 
 COMANDO_PRINT : TK_PRINT '(' EXPRESSAO ')'
@@ -1084,22 +1093,27 @@ void gerarCodigoOperadorUnario(Atributo &SS, const Atributo &S1, const Atributo 
 }
 
 string gerarCodigoScan(const Atributo &S) {
-  string codigo = string(TAB) + "scanf";
-  
-  if(S.t.nome == C_INT)
-    codigo += "(\"%d\", &" + S.v + ");\n";
-  else if(S.t.nome == C_CHAR)
-    codigo += "(\"%c\", &" + S.v + ");\n";
-  else if(S.t.nome == C_FLOAT)
-    codigo += "(\"%f\", &" + S.v + ");\n";
-  else if(S.t.nome == C_DOUBLE)
-    codigo += "(\"%lf\", &" + S.v + ");\n";
-  else if(S.t.nome == C_STRING)
-    codigo += "(\"%s\", &" + S.v + ");\n";
-  else if(S.t.nome == C_BOOL)
-    codigo += "(\"%d\", &" + S.v + ");\n";
+    string codigo = string(TAB) + "scanf";
 
-  return codigo;
+    string var = gerarVarTemp(S.t);
+    if (S.t.nome == C_INT)
+        codigo += "(\"%d\", &"  + var + ");\n";
+    else if (S.t.nome == C_CHAR)
+        codigo += "(\"%c\", &"  + var + ");\n";
+    else if (S.t.nome == C_FLOAT)
+        codigo += "(\"%f\", &"  + var + ");\n";
+    else if (S.t.nome == C_DOUBLE)
+        codigo += "(\"%lf\", &" + var + ");\n";
+    else if (S.t.nome == C_STRING)
+        codigo += "(\"%s\", "   + var + ");\n";
+    else if (S.t.nome == C_BOOL)
+        codigo += "(\"%d\", &"  + var + ");\n";
+
+    Atributo aux;
+    gerarCodigoOperadorBinario(aux, S, Atributo("="), Atributo(var, S.t));
+    codigo += aux.c;
+
+    return codigo;
 }
 
 string gerarCodigoPrint(const Atributo &S){

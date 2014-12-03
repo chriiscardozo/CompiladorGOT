@@ -70,6 +70,6 @@ Stark bar() winter_is_coming
     maester_read(a);
     maester_read(b);
     maester_read(d);
-    #HODOR maester_read(x[1][2]);
+    maester_read(x[1][2]);
 
 all_functions_must_die
