@@ -82,13 +82,12 @@ struct SimboloFuncao {
 
 #define MAX_STR     256
 
-#define MAX_CASES   1000
-
 void yyerror(const char*);
 void erro(string msg);
 int yylex();
 int yyparse();
 
+int n_loop_switch = 0;
 
 int id_bloco = 0;
 string codigoVarsProcedimento = "";
@@ -505,24 +504,41 @@ COMANDO_IF : TK_IF '(' EXPRESSAO ')' BLOCO
              { $$.c = gerarCodigoIfElse($3, $5, $7); }
            ;
 
-COMANDO_WHILE : TK_WHILE '(' EXPRESSAO ')' BLOCO
-                { $$.c = gerarCodigoWhile($3, $5); }
+INIT_WHILE:  TK_WHILE  { ++n_loop_switch; };
+INIT_DO:     TK_DO     { ++n_loop_switch; };
+INIT_FOR:    TK_FOR    { ++n_loop_switch; };
+INIT_SWITCH: TK_SWITCH { ++n_loop_switch; };
+
+COMANDO_WHILE : INIT_WHILE '(' EXPRESSAO ')' BLOCO
+                { 
+                    $$.c = gerarCodigoWhile($3, $5);
+                    --n_loop_switch;
+                }
               ;
 
-COMANDO_DO_WHILE : TK_DO BLOCO TK_WHILE '(' EXPRESSAO ')'
-                   { $$.c = gerarCodigoDoWhile($5, $2); }
+COMANDO_DO_WHILE : INIT_DO BLOCO TK_WHILE '(' EXPRESSAO ')'
+                   {
+                        $$.c = gerarCodigoDoWhile($5, $2);
+                        --n_loop_switch;
+                   }
                  ;
 
-COMANDO_FOR : TK_FOR '(' EXPRESSAO_FOR ';' EXPRESSAO_FOR ';' EXPRESSAO_FOR ')' BLOCO
-              { $$.c = gerarCodigoFor($3, $5, $7, $9); }
+COMANDO_FOR : INIT_FOR '(' EXPRESSAO_FOR ';' EXPRESSAO_FOR ';' EXPRESSAO_FOR ')' BLOCO
+              {
+                    $$.c = gerarCodigoFor($3, $5, $7, $9);
+                    --n_loop_switch;
+              }
             ;
 
 EXPRESSAO_FOR : EXPRESSAO { $$ = $1; }
               | { $$ = Atributo(); }
               ;
 
-COMANDO_SWITCH : TK_SWITCH '(' EXPRESSAO ')' TK_COMECA_BLOCO LISTA_CASE TK_TERMINA_BLOCO
-                 { $$.c = gerarCodigoSwitch($3, $6); }
+COMANDO_SWITCH : INIT_SWITCH '(' EXPRESSAO ')' TK_COMECA_BLOCO LISTA_CASE TK_TERMINA_BLOCO
+                 {
+                    $$.c = gerarCodigoSwitch($3, $6);
+                    --n_loop_switch;
+                 }
                ;
 
 LISTA_CASE : CASE LISTA_CASE
@@ -538,7 +554,10 @@ DEFAULT : TK_DEFAULT ':' CORPO
           { listaSCases.push_back(make_pair(Atributo(), $3.c)); }
         ;
 
-COMANDO_BREAK : TK_BREAK { $$.c = TAB C_TK_BREAK ";\n"; }
+COMANDO_BREAK : TK_BREAK { 
+                            $$.c = TAB C_TK_BREAK ";\n";
+                            if(n_loop_switch == 0) erro("Break fora de loop ou switch.");
+                         }
               ;
 
 COMANDO_RETURN : TK_RETURN EXPRESSAO
