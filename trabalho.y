@@ -99,7 +99,8 @@ vector<Atributo> pipeVars;
 vector<string> labelPassoPipes;
 
 typedef pair<Atributo, string> SCase;
-vector<SCase> listaSCases;
+typedef vector<SCase> ListaSCases;
+vector<ListaSCases> listaSwitches;
 
 typedef map<string, SimboloFuncao> TSF;
 TSF tabelaFuncoes;
@@ -507,7 +508,11 @@ COMANDO_IF : TK_IF '(' EXPRESSAO ')' BLOCO
 INIT_WHILE:  TK_WHILE  { ++n_loop_switch; };
 INIT_DO:     TK_DO     { ++n_loop_switch; };
 INIT_FOR:    TK_FOR    { ++n_loop_switch; };
-INIT_SWITCH: TK_SWITCH { ++n_loop_switch; };
+INIT_SWITCH: TK_SWITCH
+             {
+                listaSwitches.push_back(ListaSCases());
+                ++n_loop_switch;
+             }
 
 COMANDO_WHILE : INIT_WHILE '(' EXPRESSAO ')' BLOCO
                 { 
@@ -547,11 +552,11 @@ LISTA_CASE : CASE LISTA_CASE
            ;
 
 CASE : TK_CASE TERMINAL ':' CORPO
-       { listaSCases.push_back(make_pair($2, $4.c)); }
+       { listaSwitches.back().push_back(make_pair($2, $4.c)); }
      ;
 
 DEFAULT : TK_DEFAULT ':' CORPO
-          { listaSCases.push_back(make_pair(Atributo(), $3.c)); }
+          { listaSwitches.back().push_back(make_pair(Atributo(), $3.c)); }
         ;
 
 COMANDO_BREAK : TK_BREAK { 
@@ -1283,7 +1288,7 @@ string gerarCodigoSwitch(const Atributo &expr, const Atributo &cod) {
     string condicoes;
     string blocos;
 
-    for (const auto &c : listaSCases) {
+    for (const auto &c : listaSwitches.back()) {
         string label = gerarLabel();
         if (c.first.v != "") {
             Atributo a;
@@ -1306,7 +1311,7 @@ string gerarCodigoSwitch(const Atributo &expr, const Atributo &cod) {
 
     replaceAll(blocos, C_TK_BREAK, "goto " + label_end);
 
-    listaSCases.clear();
+    listaSwitches.pop_back();
     return condicoes + blocos;
 }
 

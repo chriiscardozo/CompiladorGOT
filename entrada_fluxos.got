@@ -37,8 +37,15 @@ First_of_his_name()
     inteiro1 = 2;
     which_house_do_you_belong_in(inteiro1){
         house 1000: 
-            maester_write(1);
-            maester_write("\n");
+            maester_write(1000);
+            which_house_do_you_belong_in(inteiro2) {
+                house 10:
+                    maester_write(10);
+                house 20:
+                    maester_write(2);
+                free_folk:
+                    maester_write("free");
+            }
             breaker_of_chains;
         house 2:
             maester_write(2);

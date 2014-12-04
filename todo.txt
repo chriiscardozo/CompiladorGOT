@@ -1,6 +1,6 @@
 - função com tipo de retorno string
 - passagem por referencia (deixar para o final!) A.K.A não fazer :p
-- switch-case (nao funciona switch dentro de switch)
+- switch-case (nao funciona switch dentro de switch) ok
 - break (falta verificar se o break e' valido) ok
 - pipes! (5 pontos) (iremos criar nomes legais? :P)
     - intervalo     ok
