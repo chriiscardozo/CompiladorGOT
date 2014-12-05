@@ -53,6 +53,7 @@ PRINT               "maester_write"
 INTERVALO           "intervalo"
 FILTER              "filter"
 FOREACH             "foreach"
+FIRSTN              "firstN"
 
 OR                  "||"
 AND                 "&&"
@@ -132,6 +133,7 @@ BIB_INCLUDE         (("<")({LETRA})*(".h")?(">")|(\")({LETRA})*(".h")?(\"))
 {INTERVALO}         { yylval = Atributo(yytext); return TK_INTERVALO; }
 {FILTER}            { yylval = Atributo(yytext); return TK_FILTER; }
 {FOREACH}           { yylval = Atributo(yytext); return TK_FOREACH; }
+{FIRSTN}            { yylval = Atributo(yytext); return TK_FIRSTN; }
 
 {OR}                { yylval = Atributo(yytext); return TK_OR; }
 {AND}               { yylval = Atributo(yytext); return TK_AND; }

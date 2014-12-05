@@ -97,6 +97,8 @@ string tipo_retorno_atual = "";
 int id_pipe = 0;
 vector<Atributo> pipeVars;
 vector<string> labelPassoPipes;
+string init_firstN_vars;
+
 
 typedef pair<Atributo, string> SCase;
 typedef vector<SCase> ListaSCases;
@@ -166,7 +168,7 @@ void verificarPrototiposDeclarados();
 %token TK_ADICAO TK_SUBTRACAO TK_MULTIPLICACAO TK_DIVISAO TK_MODULO
 %token TK_COMP_MENOR TK_COMP_MAIOR TK_COMP_MENOR_IGUAL TK_COMP_MAIOR_IGUAL TK_COMP_IGUAL TK_COMP_DIFF
 %token TK_OR TK_AND TK_NOT
-%token TK_PIPE TK_INTERVALO TK_FILTER TK_FOREACH
+%token TK_PIPE TK_INTERVALO TK_FILTER TK_FOREACH TK_FIRSTN
 %token TK_ATRIBUICAO
 %token TK_IF TK_ELSE TK_FOR TK_DO TK_WHILE TK_SWITCH TK_CASE TK_DEFAULT TK_BREAK
 %token TK_RETURN
@@ -610,7 +612,10 @@ COMANDO_PIPE : TK_INTERVALO '[' EXPRESSAO ':' EXPRESSAO ']' '(' INIT_PIPE ')' PR
                     string label = labelPassoPipes.back();
 
                     init.c = $3.c + $5.c +
-                             TAB + var.v + " = " + $3.v + ";\n";
+                             TAB + var.v + " = " + $3.v + ";\n" + init_firstN_vars;
+
+                    init_firstN_vars = "";
+
                     gerarCodigoOperadorBinario(condicao, var, Atributo("<="), Atributo($5.v, $5.t));
                     upd.t = Tipo(C_INT);
                     upd.v = var.v;
@@ -681,6 +686,25 @@ PROC : TK_FILTER '[' EXPRESSAO ']'
                 erro("Expressão não booleana.");
             gerarCodigoOperadorUnario($$, Atributo("!"), $3);
             $$.c += TAB "if (" + $$.v + ") goto " + labelPassoPipes.back() + ";\n";
+       }
+     | TK_FIRSTN '[' EXPRESSAO ']'
+       {
+           if ($3.t.nome != C_INT)
+                erro("Expressão não resulta em um número inteiro.");
+
+            Atributo temp_firstN = Atributo(gerarVarTemp(Tipo(C_INT)), C_INT);
+
+            init_firstN_vars += $3.c + 
+                                TAB + temp_firstN.v + "=" + $3.v + ";\n";
+
+            Atributo condicao, not_condicao, temp_decremento, novo_temp_firstN;
+
+            gerarCodigoOperadorBinario(condicao, temp_firstN, Atributo(">"), Atributo("0", C_INT));
+            gerarCodigoOperadorUnario($$, Atributo("!"), condicao);
+            $$.c += TAB "if (" + $$.v + ") goto " + labelPassoPipes.back() + ";\n";
+            gerarCodigoOperadorBinario(temp_decremento, temp_firstN, Atributo("-"), Atributo("1", C_INT));
+            gerarCodigoOperadorBinario(novo_temp_firstN, temp_firstN, Atributo("="), temp_decremento);
+            $$.c += novo_temp_firstN.c;
        }
      ;
 

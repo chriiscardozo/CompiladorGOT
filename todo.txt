@@ -6,7 +6,7 @@
     - intervalo     ok
     - filter        ok
     - foreach       ok
-    - firstN
+    - firstN        ok
     - lastN
     - sort
     - split
