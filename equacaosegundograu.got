@@ -1,7 +1,5 @@
 When you play the game of thrones, you win or you die
 
-its_known epsilon as baratheon;
-
 baratheon raizQuadrada(baratheon l, baratheon h, baratheon val)
 winter_is_coming
     its_known m as baratheon;
@@ -30,8 +28,6 @@ all_functions_must_die
 First_of_his_name()
     its_known a, b, c, discriminante, r1, r2, real, imaginario as baratheon;
     its_known continuar as targaryen;
-
-    epsilon = 0.0001;
 
     while_the_proud_lord_says (FIRE) {
         maester_write("Entre com o primeiro coeficiente real: ");
