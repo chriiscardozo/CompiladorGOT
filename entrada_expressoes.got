@@ -54,24 +54,12 @@ Stark bar() winter_is_coming
     ITS_KNOWN x[2][5], z[10], y[3][5] AS Stark;
     #HODOR ITS_KNOWN a AS Lannister; DESCOMENTAR PARA DAR ERRO DE JA DEFINIDA
 
-    b = 12;
-    b = b + b;
-
-    z[1] = 1;
-
-    d = 5+z[4]+x[1][3]*15.5;
-    
-    {
-       ITS_KNOWN a, b AS Baratheon;
-       a+b+c+d;
-       {
-          ITS_KNOWN vetor_string[10] AS Targaryen;
-       }
+    for_the_lord_of_winterfell (a = 0; a < 10; a = a + 1) {
+        x[a*a-4][a-2] = a;
     }
 
-    maester_read(a);
-    maester_read(b);
-    maester_read(d);
-    maester_read(x[1][2]);
+    for_the_lord_of_winterfell (a = 0; a < 10; a = a + 1) {
+        maester_read(z[a+1]);
+    }
 
 all_functions_must_die

@@ -115,6 +115,7 @@ void replaceAll(string &s, const string &search, const string &replace);
 
 string validarAcessoArray(string var, string dims);
 vector<string> traduzDimensoesArray(string aux);
+Atributo gerarCodigoAcessoArray(const Atributo &var, const Atributo &array);
 string gerarIncludeC(string bib);
 string declararVariavel(string tipo_base, string vars, int bloco);
 void inserirVariavelTabela(TSV &tabela, Tipo tipo, string nome, int bloco);
@@ -329,6 +330,16 @@ ARRAY : '[' TK_CTE_INT ']' ARRAY { $$.c = "[" + $2.v + "]" + $4.c; }
       | { $$ = Atributo(); }
       ;
 
+ACESSO_ARRAY : '[' EXPRESSAO ']' ACESSO_ARRAY
+               {
+                    if ($2.t.nome != C_INT)
+                        erro("Índice de array não inteiro.");
+                    $$.v = "[" + $2.v + "]" + $4.v;
+                    $$.c = $2.c + $4.c;
+               }
+             | { $$ = Atributo(); }
+             ;
+
 BLOCO : COMECA_BLOCO CORPO TK_TERMINA_BLOCO     { $$.c = $2.c; removerBlocoVars(); }
       | COMECA_BLOCO CORPO TK_TERMINA_FUNCAO    { $$.c = $2.c; removerBlocoVars(); }
       ;
@@ -437,11 +448,10 @@ EXPRESSAO : EXPRESSAO TK_ADICAO EXPRESSAO
             { gerarCodigoOperadorBinario($$, $1, $2, $3); }
           | TK_NOT EXPRESSAO
             { gerarCodigoOperadorUnario($$, $1, $2); }
-          | TK_ID ARRAY TK_ATRIBUICAO EXPRESSAO
+          | TK_ID ACESSO_ARRAY TK_ATRIBUICAO EXPRESSAO
             {
                 Atributo var = buscaVariavel($1.v);
-                string posicaoAcesso = validarAcessoArray($1.v, $2.c);
-                var.v += posicaoAcesso;
+                var = gerarCodigoAcessoArray(var, $2);
                 gerarCodigoOperadorBinario($$, var, $3, $4);
             }
           | CHAMADA_FUNCAO
@@ -472,7 +482,7 @@ TERMINAL : VAR
            { $$ = Atributo("0", C_INT); }
          ;
 
-VAR : TK_ID ARRAY
+VAR : TK_ID ACESSO_ARRAY
       {
         int isPipeVar = 0;
         for (int i = 0; i < pipeVars.size(); i++) {
@@ -480,7 +490,7 @@ VAR : TK_ID ARRAY
             while (isdigit(s.back()))
                 s.pop_back();
             if ($1.v + "_pipe_" == s) {
-                if ($2.c != "")
+                if ($2.v != "")
                     erro("Variável de pipe não é um array.");
                 isPipeVar = 1;
                 $$ = pipeVars[i];
@@ -488,11 +498,11 @@ VAR : TK_ID ARRAY
             }
         }
         if (!isPipeVar) {
-            $$ = buscaVariavel($1.v);
-            string posicaoAcesso = validarAcessoArray($1.v, $2.c);
-            if (posicaoAcesso != "") {
+            Atributo var = buscaVariavel($1.v);
+            $$ = gerarCodigoAcessoArray(var, $2);
+            if ($2.v != "") {
                 string temp = gerarVarTemp($$.t);
-                $$.c = TAB + temp + " = " + $$.v + posicaoAcesso + ";\n";
+                $$.c += TAB + temp + " = " + $$.v + ";\n";
                 $$.v = temp;
             }
         }
@@ -578,10 +588,10 @@ COMANDO_RETURN : TK_RETURN EXPRESSAO
                  }
                ;
 
-COMANDO_SCAN : TK_SCAN '(' TK_ID ARRAY ')'
+COMANDO_SCAN : TK_SCAN '(' TK_ID ACESSO_ARRAY ')'
                {
                     Atributo var = buscaVariavel($3.v);
-                    var.v += validarAcessoArray($3.v, $4.c);
+                    var = gerarCodigoAcessoArray(var, $4);
                     $$.c = gerarCodigoScan(var);
                }
              ;
@@ -991,6 +1001,26 @@ string validarAcessoArray(string var, string dims) {
     }
 
     return codigo;
+}
+
+Atributo gerarCodigoAcessoArray(const Atributo &var, const Atributo &array) {
+    vector<string> dims = traduzDimensoesArray(array.v);
+
+    if (dims.size() != var.t.ndim)
+        erro("Acesso inválido a posição do array.");
+
+    if (dims.size() == 0) {
+        return var;
+    }
+    else if (dims.size() == 1) {
+        return Atributo(var.v + array.v, var.t, array.c);
+    }
+    else {
+        Atributo temp1, temp2;;
+        gerarCodigoOperadorBinario(temp1, Atributo(dims[0], C_INT), Atributo("*"), Atributo(toStr(var.t.t_dim[1]), C_INT));
+        gerarCodigoOperadorBinario(temp2, temp1, Atributo("+"), Atributo(dims[1], C_INT));
+        return Atributo(var.v + "[" + temp2.v + "]", var.t, array.c + temp2.c);
+    }
 }
 
 void inserirVariavelTabela(TSV &tabela, Tipo tipo, string nome, int bloco){
