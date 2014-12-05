@@ -1,0 +1,62 @@
+When you play the game of thrones, you win or you die
+
+#dracarys <stdio.h>
+#dracarys <math.h>
+
+First_of_his_name()
+  
+    ITS_KNOWN A[3][4], B[4][10], C[3][10] As Stark;
+    ITS_KNOWN sum, i, j, k, ans As Stark;
+    
+     for_the_lord_of_winterfell (i = 0; i < 3; i = i + 1) {
+        for_the_lord_of_winterfell (j = 0; j < 4; j = j + 1) {
+            A[i][j] = i+j;  
+        }
+    }
+
+    for_the_lord_of_winterfell (i = 0; i < 4; i = i + 1) {
+        for_the_lord_of_winterfell (j = 0; j < 10; j = j + 1) {
+            B[i][j] = i+j;
+        }
+    }
+
+    maester_write("\n");
+    maester_write("Impressão direta:");
+    maester_write("\n");
+    sum = 0;
+    for_the_lord_of_winterfell (i = 0; i < 3; i = i + 1) {
+        for_the_lord_of_winterfell (j = 0; j < 10; j = j + 1) {
+            for_the_lord_of_winterfell (k = 0; k < 4; k = k + 1) {
+                sum = sum + A[i][k] + B[k][j];
+            }
+            maester_write(sum);
+            maester_write("   ");
+            sum = 0;
+        }
+        maester_write("\n");
+    }
+
+    sum = 0;
+    for_the_lord_of_winterfell (i = 0; i < 3; i = i + 1) {
+        for_the_lord_of_winterfell (j = 0; j < 10; j = j + 1) {
+            for_the_lord_of_winterfell (k = 0; k < 4; k = k + 1) {
+                sum = sum + A[i][k] + B[k][j];
+            }
+            C[i][j] = sum;
+            sum = 0;
+        }
+    }
+    maester_write("\n");
+    maester_write("Utilizando uma matriz auxiliar:");
+    maester_write("\n");
+    for_the_lord_of_winterfell (i = 0; i < 3; i = i + 1) {
+        for_the_lord_of_winterfell (j = 0; j < 10; j = j + 1) {
+            ans = C[i][j];
+            maester_write(ans);
+            maester_write("   ");
+        }
+        maester_write("\n");
+    }
+    maester_write("\n");
+
+and_now_his_watch_is_ended

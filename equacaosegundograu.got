@@ -1,0 +1,97 @@
+When you play the game of thrones, you win or you die
+
+its_known epsilon as baratheon;
+
+baratheon raizQuadrada(baratheon l, baratheon h, baratheon val)
+winter_is_coming
+    its_known m as baratheon;
+
+    m = (l+h)/2;
+
+    what_do_we_say_to_death( ((val-m*m)<0.000001) && ((val-m*m)>0.000001n) ) {
+        the_lannister_send_their_regards m;
+    }
+
+    what_do_we_say_to_death( m*m > val ) {
+        the_lannister_send_their_regards raizQuadrada(l,m,val);
+    } not_today {
+        the_lannister_send_their_regards raizQuadrada(m,h,val);
+    }
+
+all_functions_must_die
+
+baratheon calculaDiscriminante(baratheon a, baratheon b, baratheon c)
+winter_is_coming
+
+    the_lannister_send_their_regards b*b-4*a*c;
+
+all_functions_must_die
+
+First_of_his_name()
+    its_known a, b, c, discriminante, r1, r2, real, imaginario as baratheon;
+    its_known continuar as targaryen;
+
+    epsilon = 0.0001;
+
+    while_the_proud_lord_says (FIRE) {
+        maester_write("Entre com o primeiro coeficiente real: ");
+        maester_read(a);
+        maester_write("Entre com o segundo coeficiente real: ");
+        maester_read(b);
+        maester_write("Entre com o terceiro  coeficiente real: ");
+        maester_read(c);
+
+        discriminante = calculaDiscriminante(a, b, c);
+        b = b*1n;
+        what_do_we_say_to_death(discriminante > 0 ) {
+            r1 = (b+raizQuadrada(0.0,discriminante,discriminante))/(2*a);
+            r2 = (b-raizQuadrada(0.0,discriminante,discriminante))/(2*a);
+            maester_write("Discriminante > 0:\n As raízes são: ");
+            maester_write(r1);
+            maester_write(", ");
+            maester_write(r2);
+            maester_write(".\n");
+        } not_today {
+            what_do_we_say_to_death(discriminante == 0 ) {
+            r1 = b/(2*a);
+            r2 = r1;
+            maester_write("Discriminante == 0:\n  As raízes são: ");
+            maester_write(r1);
+            maester_write(", ");
+            maester_write(r2);
+            maester_write(".\n");
+            } not_today {
+                real = b/(2*a);
+                discriminante = discriminante*1n;
+                imaginario = (raizQuadrada(0.0,discriminante,discriminante))/(2*a);
+                maester_write("Discriminante < 0:\n As raízes são: ");
+                maester_write(real);
+                what_do_we_say_to_death(imaginario > 0 ) {
+                    maester_write("+");
+                    maester_write(imaginario);
+                } not_today {
+                    maester_write(imaginario);
+                }
+                maester_write("i, ");
+                maester_write(real);
+                what_do_we_say_to_death(imaginario < 0 ) {
+                    imaginario = imaginario*1n;
+                    maester_write("+");
+                    maester_write(imaginario);
+                } not_today {
+                    maester_write("-");
+                    maester_write(imaginario);
+                }
+                maester_write("i");
+                maester_write(".\n");
+            }
+        }
+
+        maester_write("Deseja entrar com outra equação?\n");
+        maester_read(continuar);
+        what_do_we_say_to_death (continuar=="nao") {
+            breaker_of_chains;
+        }
+    }
+
+and_now_his_watch_is_ended
