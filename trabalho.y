@@ -467,11 +467,41 @@ EXPRESSAO : EXPRESSAO TK_ADICAO EXPRESSAO
 TERMINAL : VAR
            { $$ = $1; }
          | TK_CTE_INT
-           { $$ = Atributo($1.v, C_INT); }
+           {
+                if( ($1.v.back() == 'n') || ($1.v.back() == 'N') ) {
+                     $1.v.pop_back();
+                     $1.v.insert($1.v.begin(), '-');
+                     $1.v.insert($1.v.begin(), '(');
+                     $1.v.append(")");
+                     $$ = Atributo($1.v, C_INT);
+                }
+                else
+                    $$ = Atributo($1.v, C_INT);
+           }
          | TK_CTE_DOUBLE
-           { $$ = Atributo($1.v, C_DOUBLE); }
+           {
+                if( ($1.v.back() == 'n') || ($1.v.back() == 'N') ) {
+                     $1.v.pop_back();            
+                     $1.v.insert($1.v.begin(), '-');
+                     $1.v.insert($1.v.begin(), '(');
+                     $1.v.append(")");
+                     $$ = Atributo($1.v, C_DOUBLE);
+                }
+                else
+                    $$ = Atributo($1.v, C_DOUBLE);
+           }
          | TK_CTE_FLOAT
-           { $$ = Atributo($1.v, C_FLOAT); }
+           {
+                if( ($1.v.back() == 'n') || ($1.v.back() == 'N') ) {
+                     $1.v.pop_back();
+                     $1.v.insert($1.v.begin(), '-');
+                     $1.v.insert($1.v.begin(), '(');
+                     $1.v.append(")");
+                     $$ = Atributo($1.v, C_FLOAT);
+                }
+                else
+                    $$ = Atributo($1.v, C_FLOAT);
+           }
          | TK_CTE_CHAR
            { $$ = Atributo($1.v, C_CHAR); }
          | TK_CTE_STRING
