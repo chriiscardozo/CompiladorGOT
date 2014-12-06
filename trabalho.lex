@@ -9,7 +9,7 @@ ID                  {LETRA}({LETRA}|{NUMERO})*
 
 CTE_INT             {NUMERO}+("n")?
 CTE_DOUBLE          {NUMERO}+("."{NUMERO}+)?("n")?
-CTE_FLOAT           {NUMERO}+("."{NUMERO}+)?("n")?("f")
+CTE_FLOAT           {NUMERO}+("."{NUMERO}+)?("f")("n")?
 CTE_CHAR            "\'"."\'"
 CTE_STRING          "\""[^"\n]*"\""
 CTE_BOOL_TRUE       "FIRE"
