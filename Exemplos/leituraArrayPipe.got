@@ -25,9 +25,9 @@ First_of_his_name()
     v[18] = 9;
     v[19] = 10;
 
-    intervalo(v)[0:19](x)
-        => filter [ x > 0 ]
-            => foreach[{
+    intervalo(v)[0:20]
+        => filter(x)[ x > 0 ]
+            => foreach(x)[{
                 maester_write(x);
                 maester_write("\n");
             }];
