@@ -95,7 +95,9 @@ int id_label = 0;
 string tipo_retorno_atual = "";
 
 int id_pipe = 0;
-vector<Atributo> pipeVars;
+typedef pair<Atributo, Atributo> PipeArray;
+vector<PipeArray> pipeArrays;
+Atributo pipeVar;
 vector<string> labelPassoPipes;
 string init_firstN_vars;
 
@@ -135,6 +137,7 @@ Tipo tipoResultadoBinario(const Tipo &a, string op, const Tipo &b);
 Tipo tipoResultadoUnario(string op, const Tipo &a);
 void resetVarsTemp();
 string gerarCodigoVarsTemp();
+string gerarVarTemp(string t);
 string gerarVarTemp(const Tipo &t);
 void gerarCodigoOperadorBinario(Atributo &SS, const Atributo &S1, const Atributo &S2, const Atributo &S3);
 void gerarCodigoOperadorUnario(Atributo &SS, const Atributo &S1, const Atributo &S2);
@@ -516,6 +519,21 @@ TERMINAL : VAR
 
 VAR : TK_ID ACESSO_ARRAY
       {
+        if ($1.v == pipeVar.v) {
+            if ($2.v != "")
+                erro("Variável de pipe não é um array.");
+            $$ = Atributo(pipeVar.c, pipeVar.t);
+        }
+        else {
+            Atributo var = buscaVariavel($1.v);
+            $$ = gerarCodigoAcessoArray(var, $2);
+            if ($2.v != "") {
+                string temp = gerarVarTemp($$.t);
+                $$.c += TAB + temp + " = " + $$.v + ";\n";
+                $$.v = temp;
+            }
+        }
+        /*
         int isPipeVar = 0;
         for (int i = 0; i < pipeVars.size(); i++) {
             string s = pipeVars[i].v;
@@ -538,6 +556,7 @@ VAR : TK_ID ACESSO_ARRAY
                 $$.v = temp;
             }
         }
+        */
       }
     ;
 
@@ -632,6 +651,7 @@ COMANDO_PRINT : TK_PRINT '(' EXPRESSAO ')'
                 { $$.c = gerarCodigoPrint($3); }
               ;
 
+/*
 COMANDO_PIPE : TK_INTERVALO '[' EXPRESSAO ':' EXPRESSAO ']' '(' INIT_PIPE ')' PROCS CONSOME
                {
                     if ($3.t.nome != C_INT || $5.t.nome != C_INT)
@@ -694,13 +714,43 @@ COMANDO_PIPE : TK_INTERVALO '[' EXPRESSAO ':' EXPRESSAO ']' '(' INIT_PIPE ')' PR
                     labelPassoPipes.pop_back();
                }
              ;
+*/
 
-INIT_PIPE : TK_ID
+COMANDO_PIPE : INIT_PIPE PROCS CONSOME
+               {
+                    $$.c = $1.c + $2.c + $3.c;
+               }
+             ;
+
+INIT_PIPE : TK_INTERVALO '[' EXPRESSAO ':' EXPRESSAO ']'
             {
-                Atributo var = Atributo($1.v + "_pipe_" + toStr(id_pipe++), C_INT);
-                pipeVars.push_back(var);
-                labelPassoPipes.push_back(gerarLabel());
-                adicionarVariaveisProcedimento(TAB C_INT " " + var.v + ";\n");
+                if ($3.t.nome != C_INT || $5.t.nome != C_INT)
+                    erro("Intervalo com limites não inteiros.");
+
+                Atributo array = Atributo("temp_pipe_array_" + toStr(id_pipe++), Tipo(C_INT, 1, 1024));
+                Atributo tam;
+                gerarCodigoOperadorBinario(tam, $5, Atributo("-"), $3);
+                pipeArrays.push_back(make_pair(array, Atributo(tam.v, tam.t)));
+                adicionarVariaveisProcedimento(TAB C_INT " " + array.v + "[1024];\n");
+
+                Atributo init, condicao, upd, cmds, temp;
+
+                Atributo it = Atributo(gerarVarTemp(C_INT), C_INT);
+                gerarCodigoOperadorBinario(init, it, Atributo("="), Atributo($3.v, C_INT));
+                init.c = tam.c + init.c;
+
+                gerarCodigoOperadorBinario(condicao, it, Atributo("<"), Atributo($5.v, C_INT));
+
+                upd.t = Tipo(C_INT);
+                upd.c = TAB + it.v + " = " + it.v + " + 1;\n";
+                upd.v = it.v;
+
+                temp = Atributo(gerarVarTemp(C_INT), C_INT);
+                gerarCodigoOperadorBinario(temp, it, Atributo("-"), Atributo($3.v, C_INT));
+                cmds.c = temp.c +
+                         TAB + array.v + "[" + temp.v + "] = " + it.v + ";\n";
+
+                $$.c = gerarCodigoFor(init, condicao, upd, cmds);
             }
           ;
 
@@ -710,37 +760,115 @@ PROCS : TK_PIPE PROC PROCS
         { $$ = Atributo(); }
       ;
 
-PROC : TK_FILTER '[' EXPRESSAO ']'
+PROC : TK_FILTER '(' INIT_PROC ')' '[' EXPRESSAO ']'
        {
-            if ($3.t.nome != C_BOOL)
+            if ($6.t.nome != C_BOOL)
                 erro("Expressão não booleana.");
-            gerarCodigoOperadorUnario($$, Atributo("!"), $3);
-            $$.c += TAB "if (" + $$.v + ") goto " + labelPassoPipes.back() + ";\n";
+
+            Atributo array = pipeArrays.back().first;
+            Atributo novo  = array;
+            Atributo tam   = pipeArrays.back().second;
+            Atributo var   = Atributo(pipeVar.c, pipeVar.t);
+
+            Atributo init, condicao, upd, cmds;
+
+            Atributo it = Atributo(gerarVarTemp(C_INT), C_INT);
+            gerarCodigoOperadorBinario(init, it, Atributo("="), Atributo("0", C_INT));
+            Atributo idx = Atributo(gerarVarTemp(C_INT), C_INT);
+            init.c += TAB + idx.v + " = 0;\n";
+
+            gerarCodigoOperadorBinario(condicao, it, Atributo("<"), tam);
+
+            upd.t = Tipo(C_INT);
+            upd.c = TAB + it.v + " = " + it.v + " + 1;\n";
+            upd.v = it.v;
+
+            array.v += "[" + it.v + "]";
+            novo.v  += "[" + idx.v + "]";
+            gerarCodigoOperadorBinario(cmds, var, Atributo("="), array);
+
+            Atributo if_cod;
+            gerarCodigoOperadorBinario(if_cod, novo, Atributo("="), var);
+            if_cod.c += TAB + idx.v + " = " + idx.v + " + 1;\n";
+            cmds.c += gerarCodigoIfElse($6, if_cod, Atributo());
+
+            $$.c = gerarCodigoFor(init, condicao, upd, cmds) +
+                   TAB + tam.v + " = " + idx.v + ";\n";
+
+            pipeVar = Atributo();
        }
      | TK_FIRSTN '[' EXPRESSAO ']'
        {
-           if ($3.t.nome != C_INT)
+            if ($3.t.nome != C_INT)
                 erro("Expressão não resulta em um número inteiro.");
 
-            Atributo temp_firstN = Atributo(gerarVarTemp(Tipo(C_INT)), C_INT);
+            Atributo array = pipeArrays.back().first;
+            Atributo novo  = array;
+            Atributo tam   = pipeArrays.back().second;
 
-            init_firstN_vars += $3.c + 
-                                TAB + temp_firstN.v + "=" + $3.v + ";\n";
+            Atributo init, condicao, upd, cmds;
 
-            Atributo condicao, not_condicao, temp_decremento, novo_temp_firstN;
+            Atributo it = Atributo(gerarVarTemp(C_INT), C_INT);
+            gerarCodigoOperadorBinario(init, it, Atributo("="), Atributo("0", C_INT));
+            Atributo idx = Atributo(gerarVarTemp(C_INT), C_INT);
+            init.c = $3.c +
+                     init.c +
+                     TAB + idx.v + " = 0;\n";
 
-            gerarCodigoOperadorBinario(condicao, temp_firstN, Atributo(">"), Atributo("0", C_INT));
-            gerarCodigoOperadorUnario($$, Atributo("!"), condicao);
-            $$.c += TAB "if (" + $$.v + ") goto " + labelPassoPipes.back() + ";\n";
-            gerarCodigoOperadorBinario(temp_decremento, temp_firstN, Atributo("-"), Atributo("1", C_INT));
-            gerarCodigoOperadorBinario(novo_temp_firstN, temp_firstN, Atributo("="), temp_decremento);
-            $$.c += novo_temp_firstN.c;
+            gerarCodigoOperadorBinario(condicao, it, Atributo("<"), tam);
+
+            upd.t = Tipo(C_INT);
+            upd.c = TAB + it.v + " = " + it.v + " + 1;\n";
+            upd.v = it.v;
+
+            array.v += "[" + it.v + "]";
+            novo.v  += "[" + idx.v + "]";
+
+            Atributo if_condicao, if_cod;
+            gerarCodigoOperadorBinario(if_condicao, it, Atributo("<"), Atributo($3.v, C_INT));
+            gerarCodigoOperadorBinario(if_cod, novo, Atributo("="), array);
+            if_cod.c += TAB + idx.v + " = " + idx.v + " + 1;\n";
+            cmds.c += gerarCodigoIfElse(if_condicao, if_cod, Atributo());
+
+            $$.c = gerarCodigoFor(init, condicao, upd, cmds) +
+                   TAB + tam.v + " = " + idx.v + ";\n";
+
+            pipeVar = Atributo();
        }
      ;
 
-CONSOME : TK_FOREACH '[' COMANDO ']'
-          { $$.c = $3.c; }
+CONSOME : TK_FOREACH '(' INIT_PROC ')' '[' COMANDO ']'
+          {
+                Atributo array = pipeArrays.back().first;
+                Atributo tam   = pipeArrays.back().second;
+
+                Atributo init, condicao, upd, cmds;
+
+                Atributo it = Atributo(gerarVarTemp(C_INT), C_INT);
+                gerarCodigoOperadorBinario(init, it, Atributo("="), Atributo("0", C_INT));
+
+                gerarCodigoOperadorBinario(condicao, it, Atributo("<"), tam);
+
+                upd.t = Tipo(C_INT);
+                upd.c = TAB + it.v + " = " + it.v + " + 1;\n";
+                upd.v = it.v;
+
+                array.v += "[" + it.v + "]";
+                gerarCodigoOperadorBinario(cmds, Atributo(pipeVar.c, pipeVar.t), Atributo("="), array);
+                cmds.c += $6.c;
+
+                $$.c += gerarCodigoFor(init, condicao, upd, cmds);
+
+                pipeVar = Atributo();
+          }
         ;
+
+INIT_PROC : TK_ID
+          {
+                pipeVar = Atributo($1.v, pipeArrays.back().first.t, $1.v + "_pipe_" + toStr(id_pipe++));
+                adicionarVariaveisProcedimento(TAB + pipeVar.t.nome + " " + pipeVar.c + ";\n");
+          }
+          ;
 
 %%
 
@@ -1177,6 +1305,10 @@ string gerarCodigoVarsTemp() {
         }
     }
     return cod;
+}
+
+string gerarVarTemp(string t) {
+    return gerarVarTemp(Tipo(t));
 }
 
 string gerarVarTemp(const Tipo &t) {

@@ -15,7 +15,7 @@ CTE_STRING          "\""[^"\n]*"\""
 CTE_BOOL_TRUE       "FIRE"
 CTE_BOOL_FALSE      "ICE"
 
-COMENTARIO          "#HODOR".*"\n"
+COMENTARIO          "#HODOR".*$
 
 TIPO_INTEIRO        "stark"
 TIPO_DOUBLE         "baratheon"

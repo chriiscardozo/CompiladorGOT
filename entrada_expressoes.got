@@ -62,4 +62,6 @@ Stark bar() winter_is_coming
         maester_read(z[a+1]);
     }
 
+    a = 123n;
+
 all_functions_must_die
