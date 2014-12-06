@@ -56,6 +56,7 @@ FOREACH             "foreach"
 FIRSTN              "firstN"
 LASTN               "lastN"
 SORT                "sort"
+SPLIT               "split"
 
 OR                  "||"
 AND                 "&&"
@@ -138,6 +139,7 @@ BIB_INCLUDE         (("<")({LETRA})*(".h")?(">")|(\")({LETRA})*(".h")?(\"))
 {FIRSTN}            { yylval = Atributo(yytext); return TK_FIRSTN; }
 {LASTN}             { yylval = Atributo(yytext); return TK_LASTN; }
 {SORT}              { yylval = Atributo(yytext); return TK_SORT; }
+{SPLIT}             { yylval = Atributo(yytext); return TK_SPLIT; }
 
 {OR}                { yylval = Atributo(yytext); return TK_OR; }
 {AND}               { yylval = Atributo(yytext); return TK_AND; }

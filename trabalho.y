@@ -168,7 +168,7 @@ void verificarPrototiposDeclarados();
 %token TK_ADICAO TK_SUBTRACAO TK_MULTIPLICACAO TK_DIVISAO TK_MODULO
 %token TK_COMP_MENOR TK_COMP_MAIOR TK_COMP_MENOR_IGUAL TK_COMP_MAIOR_IGUAL TK_COMP_IGUAL TK_COMP_DIFF
 %token TK_OR TK_AND TK_NOT
-%token TK_PIPE TK_INTERVALO TK_FILTER TK_FOREACH TK_FIRSTN TK_LASTN TK_SORT
+%token TK_PIPE TK_INTERVALO TK_FILTER TK_FOREACH TK_FIRSTN TK_LASTN TK_SORT TK_SPLIT
 %token TK_ATRIBUICAO
 %token TK_IF TK_ELSE TK_FOR TK_DO TK_WHILE TK_SWITCH TK_CASE TK_DEFAULT TK_BREAK
 %token TK_RETURN
@@ -595,10 +595,12 @@ DEFAULT : TK_DEFAULT ':' CORPO
           { listaSwitches.back().push_back(make_pair(Atributo(), $3.c)); }
         ;
 
-COMANDO_BREAK : TK_BREAK { 
-                            $$.c = TAB C_TK_BREAK ";\n";
-                            if(n_loop_switch == 0) erro("Break fora de loop ou switch.");
-                         }
+COMANDO_BREAK : TK_BREAK
+                { 
+                    $$.c = TAB C_TK_BREAK ";\n";
+                    if (n_loop_switch == 0)
+                        erro("Break fora de loop ou switch.");
+                }
               ;
 
 COMANDO_RETURN : TK_RETURN EXPRESSAO
@@ -916,7 +918,79 @@ CONSOME : TK_FOREACH '(' INIT_PROC ')' '[' COMANDO ']'
 
                 pipeVars.pop_back();
           }
+        | INIT_SPLIT '(' PROCS CONSOME ')' '(' PROCS CONSOME ')'
+          {
+                Atributo novo_array = pipeArrays.back().first;
+                Atributo novo_tam   = pipeArrays.back().second;
+                Atributo array = pipeArrays[pipeArrays.size()-2].first;
+                Atributo tam   = pipeArrays[pipeArrays.size()-2].second;
+                Atributo var   = pipeVars.back();
+
+                pipeArrays.pop_back();
+                pipeVars.pop_back();
+
+                Atributo init, condicao, upd, cmds;
+
+                Atributo it = Atributo(gerarVarTemp(C_INT), C_INT);
+                gerarCodigoOperadorBinario(init, it, Atributo("="), Atributo("0", C_INT));
+
+                init.c += TAB + novo_tam.v + " = 0;\n";
+
+                gerarCodigoOperadorBinario(condicao, it, Atributo("<"), tam);
+
+                upd.t = Tipo(C_INT);
+                upd.c = TAB + it.v + " = " + it.v + " + 1;\n";
+                upd.v = it.v;
+
+                array.v += "[" + it.v + "]";
+                novo_array.v  += "[" + novo_tam.v + "]";
+                gerarCodigoOperadorBinario(cmds, var, Atributo("="), array);
+
+                Atributo if_cod;
+                gerarCodigoOperadorBinario(if_cod, novo_array, Atributo("="), var);
+                if_cod.c += TAB + novo_tam.v + " = " + novo_tam.v + " + 1;\n";
+                cmds.c += gerarCodigoIfElse($1, if_cod, Atributo());
+
+                $$.c = gerarCodigoFor(init, condicao, upd, cmds);
+
+                $$.c += $3.c + $4.c;
+
+                gerarCodigoOperadorBinario(init, it, Atributo("="), Atributo("0", C_INT));
+
+                init.c += TAB + novo_tam.v + " = 0;\n";
+
+                gerarCodigoOperadorBinario(condicao, it, Atributo("<"), tam);
+
+                upd.t = Tipo(C_INT);
+                upd.c = TAB + it.v + " = " + it.v + " + 1;\n";
+                upd.v = it.v;
+
+                gerarCodigoOperadorBinario(cmds, var, Atributo("="), array);
+
+                gerarCodigoOperadorBinario(if_cod, novo_array, Atributo("="), var);
+                if_cod.c += TAB + novo_tam.v + " = " + novo_tam.v + " + 1;\n";
+                cmds.c += gerarCodigoIfElse($1, Atributo(), if_cod);
+
+                $$.c += gerarCodigoFor(init, condicao, upd, cmds);
+
+                $$.c += $7.c + $8.c;
+          }
         ;
+
+INIT_SPLIT : TK_SPLIT '(' INIT_PROC ')' '[' EXPRESSAO ']'
+             {
+                if ($6.t.nome != C_BOOL)
+                    erro("Expressão não booleana.");
+
+                Atributo array = pipeArrays.back().first;
+                Atributo novo_array = Atributo("temp_pipe_array_" + toStr(id_pipe++), Tipo(array.t.nome, 1, 1024));
+                Atributo novo_tam = Atributo(gerarVarTemp(C_INT), C_INT);
+                pipeArrays.push_back(make_pair(novo_array, novo_tam));
+                adicionarVariaveisProcedimento(TAB C_INT " " + novo_array.v + "[1024];\n");
+
+                $$ = $6;
+             }
+             ;
 
 INIT_PROC : TK_ID
           {
@@ -964,7 +1038,6 @@ void inicializaResultadoOperador() {
     resultadoOperador["char+char"] = Tipo("char");
     resultadoOperador["char+int"] = Tipo("int");
     resultadoOperador["int+char"] = Tipo("int");
-
 
     // -
     resultadoOperador["int-int"] = Tipo("int");

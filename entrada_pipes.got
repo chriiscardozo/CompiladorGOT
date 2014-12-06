@@ -5,22 +5,32 @@ First_of_his_name()
     ITS_KNOWN a, b, c As Stark;
     ITS_KNOWN z[10] as Stark;
 
-    for_the_lord_of_winterfell (a = 0; a < 10; a = a + 1) {
-        z[a] = ((a*a+a)/(a+1)+a)*a % 33;
-        maester_write(z[a]);
-        maester_write("\n");
-    }
-
-    maester_write("\n");
-
     a = 0;
-    b = 10;
+    b = 20;
 
-    intervalo(z)[a:b]
-        => sort
-        => foreach(x)[{
-            maester_write(x);
-            maester_write("\n");
-        }];
+    intervalo[a:b]
+        => split(x)[x < 10] (
+            => filter(x)[x % 2 == 0]
+            => split(x)[x < 5] (
+                => foreach(x)[{
+                    maester_write("a ");
+                    maester_write(x);
+                    maester_write("\n");
+                }]
+            ) (
+                => foreach(x) [{
+                    maester_write("c ");
+                    maester_write(x);
+                    maester_write("\n");
+                }]
+            )
+        ) (
+            => filter(x)[x % 3 != 0]
+            => foreach(x)[{
+                maester_write("b ");
+                maester_write(x);
+                maester_write("\n");
+            }]
+        );
 
 and_now_his_watch_is_ended
