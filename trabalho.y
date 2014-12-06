@@ -168,7 +168,7 @@ void verificarPrototiposDeclarados();
 %token TK_ADICAO TK_SUBTRACAO TK_MULTIPLICACAO TK_DIVISAO TK_MODULO
 %token TK_COMP_MENOR TK_COMP_MAIOR TK_COMP_MENOR_IGUAL TK_COMP_MAIOR_IGUAL TK_COMP_IGUAL TK_COMP_DIFF
 %token TK_OR TK_AND TK_NOT
-%token TK_PIPE TK_INTERVALO TK_FILTER TK_FOREACH TK_FIRSTN TK_LASTN
+%token TK_PIPE TK_INTERVALO TK_FILTER TK_FOREACH TK_FIRSTN TK_LASTN TK_SORT
 %token TK_ATRIBUICAO
 %token TK_IF TK_ELSE TK_FOR TK_DO TK_WHILE TK_SWITCH TK_CASE TK_DEFAULT TK_BREAK
 %token TK_RETURN
@@ -844,6 +844,84 @@ PROC : TK_FILTER '(' INIT_PROC ')' '[' EXPRESSAO ']'
                    TAB + tam.v + " = " + idx.v + ";\n";
 
             pipeVar = Atributo();
+       }
+     | TK_SORT
+       {
+       /*
+            for (int i = 0; i < n; i++) {
+                for (int j = 1; j < n; j++) {
+                    j_1     j-1;
+                    varj    = a[j];
+                    varj_1  = a[j_1];
+                    if (varj_1 > varj) {
+                        a[j-1]  = varj;
+                        a[j]    = varj_1;
+                    }
+                }
+            }
+       */
+
+            Atributo arrayj     = pipeArrays.back().first;
+            Atributo arrayj_1   = arrayj;
+            Atributo tam        = pipeArrays.back().second;
+            Atributo varj       = Atributo(gerarVarTemp(arrayj.t), arrayj.t.nome);
+            Atributo varj_1     = Atributo(gerarVarTemp(arrayj.t), arrayj.t.nome);
+
+            if (arrayj.t.nome != C_INT && arrayj.t.nome != C_DOUBLE && arrayj.t.nome != C_FLOAT)
+                erro("Array não é de um tipo numérico.");
+
+            Atributo it = Atributo(gerarVarTemp(C_INT), C_INT);
+            Atributo jt = Atributo(gerarVarTemp(C_INT), C_INT);
+            Atributo jt_1;
+            gerarCodigoOperadorBinario(jt_1, jt, Atributo("-"), Atributo("1", C_INT));
+
+            // swap
+            Atributo cod_swap, aux;
+
+            arrayj.v += "[" + jt.v + "]";
+            arrayj_1.v += "[" + jt_1.v + "]";
+
+            gerarCodigoOperadorBinario(aux, arrayj, Atributo("="), varj_1);
+            cod_swap.c += aux.c;
+            gerarCodigoOperadorBinario(aux, arrayj_1, Atributo("="), varj);
+            cod_swap.c += aux.c;
+
+            // if
+            Atributo if_condicao, cod_if;
+            gerarCodigoOperadorBinario(if_condicao, varj, Atributo("<"), varj_1);
+            cod_if.c = gerarCodigoIfElse(if_condicao, cod_swap, Atributo());
+
+            // loop interno
+            Atributo int_init, int_condicao, int_upd, int_cmds, cod_for_int;
+
+            gerarCodigoOperadorBinario(int_init, jt, Atributo("="), Atributo("1", C_INT));
+            gerarCodigoOperadorBinario(int_condicao, jt, Atributo("<"), tam);
+            int_upd.t = Tipo(C_INT);
+            int_upd.c = TAB + jt.v + " = " + jt.v + " + 1;\n";
+            int_upd.v = jt.v;
+
+            int_cmds.c += jt_1.c;
+            gerarCodigoOperadorBinario(aux, varj, Atributo("="), arrayj);
+            int_cmds.c += aux.c;
+            gerarCodigoOperadorBinario(aux, varj_1, Atributo("="), arrayj_1);
+            int_cmds.c += aux.c;
+            int_cmds.c += cod_if.c;
+
+            cod_for_int.c = gerarCodigoFor(int_init, int_condicao, int_upd, int_cmds);
+
+            // loop externo
+            Atributo ext_init, ext_condicao, ext_upd, ext_cmds, cod_sort;
+
+            gerarCodigoOperadorBinario(ext_init, it, Atributo("="), Atributo("0", C_INT));
+            gerarCodigoOperadorBinario(ext_condicao, it, Atributo("<"), tam);
+            ext_upd.t = Tipo(C_INT);
+            ext_upd.c = TAB + it.v + " = " + it.v + " + 1;\n";
+            ext_upd.v = it.v;
+            ext_cmds.c = cod_for_int.c;
+
+            cod_sort.c = gerarCodigoFor(ext_init, ext_condicao, ext_upd, ext_cmds);
+
+            $$.c = cod_sort.c;
        }
      ;
 
