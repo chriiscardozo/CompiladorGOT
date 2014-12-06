@@ -25,15 +25,15 @@ First_of_his_name()
     v[18] = 9;
     v[19] = 10;
 
-    intervalo[0:20](x)
-         => filter[ x % 2 == 0 ]
-         => foreach[{
-             intervalo(v)[0:20](y)
-                => filter [ y % 2 == 1 ]
-                        => foreach[{
-                            intervalo[0:5](z)
-                               => firstN [3]
-                                   => foreach[{
+    intervalo[0:20]
+         => filter(x)[ x % 2 == 0 ]
+         => foreach(x)[{
+             intervalo(v)[0:20]
+                => filter(y)[ y % 2 == 1 ]
+                        => foreach(y)[{
+                            intervalo[0:5]
+                               => firstN[3]
+                                   => foreach(z)[{
                                     maester_write(x);
                                     maester_write("*");
                                     maester_write(y);
