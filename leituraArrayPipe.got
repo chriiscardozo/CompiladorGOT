@@ -1,0 +1,35 @@
+When you play the game of thrones, you win or you die
+
+First_of_his_name()
+
+    ITS_KNOWN v[20] As Stark;
+
+    v[0] = 10n;
+    v[1] = 9n;
+    v[2] = 8n;
+    v[3] = 7n;
+    v[4] = 6n;
+    v[5] = 5n;
+    v[6] = 4n;
+    v[7] = 3n;
+    v[8] = 2n;
+    v[9] = 1n;
+    v[10] = 1;
+    v[11] = 2;
+    v[12] = 3;
+    v[13] = 4;
+    v[14] = 5;
+    v[15] = 6;
+    v[16] = 7;
+    v[17] = 8;
+    v[18] = 9;
+    v[19] = 10;
+
+    intervalo(v)[0:19](x)
+        => filter [ x > 0 ]
+            => foreach[{
+                maester_write(x);
+                maester_write("\n");
+            }];
+
+and_now_his_watch_is_ended
