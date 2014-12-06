@@ -9,7 +9,7 @@ First_of_his_name()
     b = 20;
 
     intervalo[a:b]
-        => firstN[ 5 ]
+        => lastN [ 5 ]
         => foreach(x)[{
             maester_write(x);
             maester_write("\n");

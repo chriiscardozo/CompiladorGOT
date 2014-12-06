@@ -168,7 +168,7 @@ void verificarPrototiposDeclarados();
 %token TK_ADICAO TK_SUBTRACAO TK_MULTIPLICACAO TK_DIVISAO TK_MODULO
 %token TK_COMP_MENOR TK_COMP_MAIOR TK_COMP_MENOR_IGUAL TK_COMP_MAIOR_IGUAL TK_COMP_IGUAL TK_COMP_DIFF
 %token TK_OR TK_AND TK_NOT
-%token TK_PIPE TK_INTERVALO TK_FILTER TK_FOREACH TK_FIRSTN
+%token TK_PIPE TK_INTERVALO TK_FILTER TK_FOREACH TK_FIRSTN TK_LASTN
 %token TK_ATRIBUICAO
 %token TK_IF TK_ELSE TK_FOR TK_DO TK_WHILE TK_SWITCH TK_CASE TK_DEFAULT TK_BREAK
 %token TK_RETURN
@@ -794,6 +794,48 @@ PROC : TK_FILTER '(' INIT_PROC ')' '[' EXPRESSAO ']'
 
             Atributo if_condicao, if_cod;
             gerarCodigoOperadorBinario(if_condicao, it, Atributo("<"), Atributo($3.v, C_INT));
+            gerarCodigoOperadorBinario(if_cod, novo, Atributo("="), var);
+            if_cod.c += TAB + idx.v + " = " + idx.v + " + 1;\n";
+            cmds.c += gerarCodigoIfElse(if_condicao, if_cod, Atributo());
+
+            $$.c = gerarCodigoFor(init, condicao, upd, cmds) +
+                   TAB + tam.v + " = " + idx.v + ";\n";
+
+            pipeVar = Atributo();
+       }
+     | TK_LASTN '[' EXPRESSAO ']'
+       {
+            if ($3.t.nome != C_INT)
+                erro("Expressão não resulta em um número inteiro.");
+
+            Atributo array = pipeArrays.back().first;
+            Atributo novo  = array;
+            Atributo tam   = pipeArrays.back().second;
+            Atributo var   = Atributo(gerarVarTemp(array.t), array.t.nome);
+
+            Atributo init, condicao, upd, cmds;
+
+            Atributo it = Atributo(gerarVarTemp(C_INT), C_INT);
+            gerarCodigoOperadorBinario(init, it, Atributo("="), Atributo("0", C_INT));
+            Atributo idx = Atributo(gerarVarTemp(C_INT), C_INT);
+            init.c = $3.c +
+                     init.c +
+                     TAB + idx.v + " = 0;\n";
+
+            gerarCodigoOperadorBinario(condicao, it, Atributo("<"), tam);
+
+            upd.t = Tipo(C_INT);
+            upd.c = TAB + it.v + " = " + it.v + " + 1;\n";
+            upd.v = it.v;
+
+            array.v += "[" + it.v + "]";
+            novo.v  += "[" + idx.v + "]";
+            gerarCodigoOperadorBinario(cmds, var, Atributo("="), array);
+
+            Atributo comeco;
+            gerarCodigoOperadorBinario(comeco, tam, Atributo("-"), Atributo($3.v, C_INT));
+            Atributo if_condicao, if_cod;
+            gerarCodigoOperadorBinario(if_condicao, it, Atributo(">="), comeco);
             gerarCodigoOperadorBinario(if_cod, novo, Atributo("="), var);
             if_cod.c += TAB + idx.v + " = " + idx.v + " + 1;\n";
             cmds.c += gerarCodigoIfElse(if_condicao, if_cod, Atributo());
