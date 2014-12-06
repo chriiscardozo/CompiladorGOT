@@ -97,7 +97,7 @@ string tipo_retorno_atual = "";
 int id_pipe = 0;
 typedef pair<Atributo, Atributo> PipeArray;
 vector<PipeArray> pipeArrays;
-Atributo pipeVar;
+vector<Atributo> pipeVars;
 
 typedef pair<Atributo, string> SCase;
 typedef vector<SCase> ListaSCases;
@@ -510,23 +510,8 @@ TERMINAL : VAR
 
 VAR : TK_ID ACESSO_ARRAY
       {
-        if ($1.v == pipeVar.v) {
-            if ($2.v != "")
-                erro("Variável de pipe não é um array.");
-            $$ = Atributo(pipeVar.c, pipeVar.t);
-        }
-        else {
-            Atributo var = buscaVariavel($1.v);
-            $$ = gerarCodigoAcessoArray(var, $2);
-            if ($2.v != "") {
-                string temp = gerarVarTemp($$.t);
-                $$.c += TAB + temp + " = " + $$.v + ";\n";
-                $$.v = temp;
-            }
-        }
-        /*
         int isPipeVar = 0;
-        for (int i = 0; i < pipeVars.size(); i++) {
+        for (int i = pipeVars.size()-1; i >= 0; i--) {
             string s = pipeVars[i].v;
             while (isdigit(s.back()))
                 s.pop_back();
@@ -547,7 +532,6 @@ VAR : TK_ID ACESSO_ARRAY
                 $$.v = temp;
             }
         }
-        */
       }
     ;
 
@@ -645,6 +629,7 @@ COMANDO_PRINT : TK_PRINT '(' EXPRESSAO ')'
 COMANDO_PIPE : INIT_PIPE PROCS CONSOME
                {
                     $$.c = $1.c + $2.c + $3.c;
+                    pipeArrays.pop_back();
                }
              ;
 
@@ -734,7 +719,7 @@ PROC : TK_FILTER '(' INIT_PROC ')' '[' EXPRESSAO ']'
             Atributo array = pipeArrays.back().first;
             Atributo novo  = array;
             Atributo tam   = pipeArrays.back().second;
-            Atributo var   = Atributo(pipeVar.c, pipeVar.t);
+            Atributo var   = pipeVars.back();
 
             Atributo init, condicao, upd, cmds;
 
@@ -761,7 +746,7 @@ PROC : TK_FILTER '(' INIT_PROC ')' '[' EXPRESSAO ']'
             $$.c = gerarCodigoFor(init, condicao, upd, cmds) +
                    TAB + tam.v + " = " + idx.v + ";\n";
 
-            pipeVar = Atributo();
+            pipeVars.pop_back();
        }
      | TK_FIRSTN '[' EXPRESSAO ']'
        {
@@ -800,8 +785,6 @@ PROC : TK_FILTER '(' INIT_PROC ')' '[' EXPRESSAO ']'
 
             $$.c = gerarCodigoFor(init, condicao, upd, cmds) +
                    TAB + tam.v + " = " + idx.v + ";\n";
-
-            pipeVar = Atributo();
        }
      | TK_LASTN '[' EXPRESSAO ']'
        {
@@ -842,25 +825,9 @@ PROC : TK_FILTER '(' INIT_PROC ')' '[' EXPRESSAO ']'
 
             $$.c = gerarCodigoFor(init, condicao, upd, cmds) +
                    TAB + tam.v + " = " + idx.v + ";\n";
-
-            pipeVar = Atributo();
        }
      | TK_SORT
        {
-       /*
-            for (int i = 0; i < n; i++) {
-                for (int j = 1; j < n; j++) {
-                    j_1     j-1;
-                    varj    = a[j];
-                    varj_1  = a[j_1];
-                    if (varj_1 > varj) {
-                        a[j-1]  = varj;
-                        a[j]    = varj_1;
-                    }
-                }
-            }
-       */
-
             Atributo arrayj     = pipeArrays.back().first;
             Atributo arrayj_1   = arrayj;
             Atributo tam        = pipeArrays.back().second;
@@ -942,19 +909,20 @@ CONSOME : TK_FOREACH '(' INIT_PROC ')' '[' COMANDO ']'
                 upd.v = it.v;
 
                 array.v += "[" + it.v + "]";
-                gerarCodigoOperadorBinario(cmds, Atributo(pipeVar.c, pipeVar.t), Atributo("="), array);
+                gerarCodigoOperadorBinario(cmds, pipeVars.back(), Atributo("="), array);
                 cmds.c += $6.c;
 
                 $$.c += gerarCodigoFor(init, condicao, upd, cmds);
 
-                pipeVar = Atributo();
+                pipeVars.pop_back();
           }
         ;
 
 INIT_PROC : TK_ID
           {
-                pipeVar = Atributo($1.v, pipeArrays.back().first.t, $1.v + "_pipe_" + toStr(id_pipe++));
-                adicionarVariaveisProcedimento(TAB + pipeVar.t.nome + " " + pipeVar.c + ";\n");
+                Atributo pipeVar = Atributo($1.v + "_pipe_" + toStr(id_pipe++), pipeArrays.back().first.t);
+                adicionarVariaveisProcedimento(TAB + pipeVar.t.nome + " " + pipeVar.v + ";\n");
+                pipeVars.push_back(pipeVar);
           }
           ;
 
