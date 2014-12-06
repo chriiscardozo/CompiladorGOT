@@ -918,7 +918,7 @@ CONSOME : TK_FOREACH '(' INIT_PROC ')' '[' COMANDO ']'
 
                 pipeVars.pop_back();
           }
-        | INIT_SPLIT '(' PROCS CONSOME ')' '(' PROCS CONSOME ')'
+        | INIT_SPLIT '(' PROCS CONSOME ';' ')' '(' PROCS CONSOME ';' ')'
           {
                 Atributo novo_array = pipeArrays.back().first;
                 Atributo novo_tam   = pipeArrays.back().second;
@@ -973,7 +973,7 @@ CONSOME : TK_FOREACH '(' INIT_PROC ')' '[' COMANDO ']'
 
                 $$.c += gerarCodigoFor(init, condicao, upd, cmds);
 
-                $$.c += $7.c + $8.c;
+                $$.c += $8.c + $9.c;
           }
         ;
 

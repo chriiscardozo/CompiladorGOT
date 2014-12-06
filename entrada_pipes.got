@@ -16,21 +16,21 @@ First_of_his_name()
                     maester_write("a ");
                     maester_write(x);
                     maester_write("\n");
-                }]
+                }];
             ) (
                 => foreach(x) [{
                     maester_write("c ");
                     maester_write(x);
                     maester_write("\n");
-                }]
-            )
+                }];
+            );
         ) (
             => filter(x)[x % 3 != 0]
             => foreach(x)[{
                 maester_write("b ");
                 maester_write(x);
                 maester_write("\n");
-            }]
+            }];
         );
 
 and_now_his_watch_is_ended
